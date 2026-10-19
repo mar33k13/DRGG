@@ -1,14 +1,14 @@
 {
   "name": "drgg",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.2.0",
   "type": "module",
   "license": "GPL-3.0-only",
   "author": "kaizem (mar33k13)",
   "scripts": {
     "dev": "vite --host 127.0.0.1",
     "build": "tsc --noEmit && vite build",
-    "test": "vitest run",
+    "test": "vitest run && node --test scripts/*.test.mjs",
     "test:ui": "playwright test",
     "tauri": "tauri",
     "format": "prettier --write .",

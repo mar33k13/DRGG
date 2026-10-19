@@ -2,7 +2,7 @@
 
 **Ideas pequeñas. Juegos posibles. / Small ideas. Possible games.**
 
-App de escritorio para decidir qué videojuego pequeño construir en 5–10 minutos. Creada por **kaizem (mar33k13)**. Generación por plantillas, sin cuentas, telemetría, suscripciones ni servicios externos.
+App de escritorio para decidir qué videojuego pequeño construir en 5–10 minutos. Creada por **kaizem (mar33k13)**. Generación por plantillas, sin cuentas, telemetría, suscripciones ni servicios de IA. La generación y la biblioteca funcionan sin conexión; las actualizaciones se consultan manualmente en GitHub.
 
 ![Pantalla inicial de DRGG](docs/screenshots/home.png)
 
@@ -61,7 +61,7 @@ pnpm tauri build          # Instalador del sistema actual
 
 Actions comprueba la interfaz y prepara paquetes para macOS Apple Silicon/Intel, Windows x64 y Linux x64. Los paquetes se descargan desde las ejecuciones como artifacts. Compilar no equivale a probar manualmente cada sistema. Los tags `v*` preparan una **release en borrador** que el mantenedor revisa y publica. Las compilaciones iniciales no están firmadas ni notarizadas: el sistema puede mostrar avisos o bloquear la apertura hasta que el usuario la autorice. La firma necesita certificados propios. Windows ARM y Linux ARM quedan fuera de la matriz inicial.
 
-Próximas iteraciones propuestas: [unificación y compactación de la interfaz](docs/NEXT_UI.md) y [actualizaciones desde la aplicación](docs/UPDATES_PLAN.md). Son planes; la versión 0.1.0 todavía se actualiza mediante instalador.
+La versión 0.2.0 incluye la [interfaz unificada y compacta](docs/NEXT_UI.md) y [actualizaciones desde Acerca de DRGG](docs/UPDATES_PLAN.md). Instala 0.2.0 una vez mediante instalador; las versiones posteriores se consultan a petición. El canal estable solo ofrece versiones publicadas, nunca borradores ni prereleases.
 
 ## Contribuir
 

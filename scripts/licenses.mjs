@@ -85,7 +85,10 @@ for (const [text, names] of groups)
   output += `\n${'='.repeat(72)}\n${[...names].sort().join('\n')}\n${'-'.repeat(72)}\n${text}\n`;
 if (missing.length)
   output += `\n${'='.repeat(72)}\nPackages without standalone license files (consult the corresponding source package):\n${missing.sort().join('\n')}\n`;
-writeFileSync('src/data/third-party-notices.txt', output);
+writeFileSync(
+  'src/data/third-party-notices.txt',
+  output.replace(/\r\n/g, '\n').replace(/[ \t]+$/gm, ''),
+);
 console.log(
   `Collected ${groups.size} unique notice texts; ${missing.length} packages need source-manifest references.`,
 );

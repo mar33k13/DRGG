@@ -31,7 +31,7 @@ import {
   Handshake,
   Sparkles,
 } from 'lucide-react';
-import { isTauri } from '@tauri-apps/api/core';
+import { invoke, isTauri } from '@tauri-apps/api/core';
 import { getCurrentWindow } from '@tauri-apps/api/window';
 import licenseText from '../LICENSE?raw';
 import dependencyNotices from './data/third-party-notices.txt?raw';
@@ -58,9 +58,19 @@ import { choiceDetails } from './choiceDetails';
 import { useMotion } from './useMotion';
 import { ChoiceCard } from './ui/ChoiceCard';
 import { SectionHeading } from './ui/SectionHeading';
+import { UpdatePanel } from './ui/UpdatePanel';
+import { useUpdates, type UpdateResume } from './updates';
+import { updateText } from './updateText';
 import { aiAreas, developmentModes, developmentText } from './development';
 type Screen = 'home' | 'wizard' | 'library';
-type Prompt = { title: string; body: string; confirm: string; action: () => void };
+type Prompt = {
+  title: string;
+  body: string;
+  confirm: string;
+  action: () => void;
+  saveAction?: () => void;
+  saveLabel?: string;
+};
 const stepFields: Field[][] = [
   ['team', 'scope'],
   ['theme', 'genre', 'subgenre'],
@@ -75,6 +85,9 @@ function initialLang(): Lang {
   }
 }
 export default function App() {
+  const updater = useUpdates();
+  const resumeTaken = useRef(false);
+  const installing = useRef(false);
   const { reducedMotion, reducedBySystem, toggleMotion } = useMotion();
   const [roll, setRoll] = useState({ id: 0, fields: [] as Field[] });
   const [savedId, setSavedId] = useState<string | null>(null);
@@ -110,7 +123,27 @@ export default function App() {
     setReady(false);
     setLoadFailed(false);
     try {
-      setLibrary(await loadLibrary());
+      const loaded = await loadLibrary();
+      setLibrary(loaded);
+      if (isTauri() && !resumeTaken.current) {
+        resumeTaken.current = true;
+        // Failure to recover navigation must never prevent opening the library.
+        const resume = await invoke<UpdateResume | null>('take_update_resume').catch(() => null);
+        if (resume) {
+          const concept = loaded.find((c) => c.id === resume.choice.conceptId);
+          if (concept) {
+            setDraft(concept);
+            setSavedId(concept.id);
+            setStep(resume.choice.step);
+          }
+          setScreen(resume.choice.screen === 'wizard' && !concept ? 'home' : resume.choice.screen);
+          notify(
+            resume.updated
+              ? `${updateText[lang].updated} ${resume.version}`
+              : updateText[lang].interrupted,
+          );
+        }
+      }
     } catch {
       setLoadFailed(true);
     } finally {
@@ -139,6 +172,11 @@ export default function App() {
       return () => previous?.focus();
     }
   }, [prompt, about]);
+  useEffect(() => {
+    // Checking/downloading replaces the focused action. Keep keyboard focus in the dialog.
+    if (about && !prompt && !modalRef.current?.contains(document.activeElement))
+      modalRef.current?.querySelector<HTMLElement>('button:not(:disabled), summary')?.focus();
+  }, [updater.phase, about, prompt]);
   useEffect(() => {
     const handler = (e: BeforeUnloadEvent) => {
       if (dirty) {
@@ -309,7 +347,37 @@ export default function App() {
       setDraft(c);
       setDirty(false);
       setSavedId(c.id);
+      return c;
     }
+    return null;
+  };
+  const performInstall = async (saveBefore: boolean) => {
+    if (installing.current || busy || !ready || loadFailed) return;
+    installing.current = true;
+    const stored = saveBefore ? await save() : library.find((c) => c.id === draft.id);
+    if (saveBefore && !stored) {
+      installing.current = false;
+      return;
+    }
+    setBusy(true);
+    await updater.install({
+      conceptId: stored?.id || null,
+      screen: screen === 'wizard' && !stored ? 'home' : screen,
+      step,
+    });
+    // A real native success restarts. On failure the user can continue or retry.
+    setBusy(false);
+    installing.current = false;
+  };
+  const askInstall = () => {
+    const ut = updateText[lang];
+    setPrompt({
+      title: ut.confirmTitle,
+      body: dirty ? ut.dirtyBody : ut.confirmBody,
+      confirm: dirty ? ut.discard : ut.install,
+      action: () => void performInstall(false),
+      ...(dirty ? { saveLabel: ut.save, saveAction: () => void performInstall(true) } : {}),
+    });
   };
   const importRaw = async (raw: string) => {
     let c: Concept;
@@ -356,12 +424,14 @@ export default function App() {
       setScreen('wizard');
     });
   const trapModal = (e: React.KeyboardEvent) => {
-    if (e.key === 'Escape') {
+    if (e.key === 'Escape' && !busy) {
       setPrompt(null);
       setAbout(false);
     }
     if (e.key === 'Tab') {
-      const nodes = modalRef.current?.querySelectorAll<HTMLElement>('button, summary, [href]');
+      const nodes = modalRef.current?.querySelectorAll<HTMLElement>(
+        'button:not(:disabled), summary, [href]',
+      );
       if (!nodes?.length) return;
       const first = nodes[0],
         last = nodes[nodes.length - 1];
@@ -601,7 +671,7 @@ export default function App() {
             {t.about}
           </button>
           <span className="version">
-            v0.1.0 <span>GPLv3</span>
+            v{updater.info.version} <span>GPLv3</span>
           </span>
         </div>
       </aside>
@@ -1272,7 +1342,9 @@ export default function App() {
             <span className="status-dot" />
             {t.allLocal}
           </span>
-          <span>{dirty ? '● ' : ''}DRGG — v0.1.0</span>
+          <span>
+            {dirty ? '● ' : ''}DRGG — v{updater.info.version}
+          </span>
           <span className="footer-count">
             {library.length.toString().padStart(2, '0')} / {t.concepts}
           </span>
@@ -1326,8 +1398,14 @@ export default function App() {
               description={prompt?.body || t.aboutText}
               kicker={about ? 'DRGG / STUDIO' : undefined}
             />
-            {about && (
+            {about && !prompt && (
               <>
+                <UpdatePanel
+                  updater={updater}
+                  lang={lang}
+                  onInstall={askInstall}
+                  blocked={busy || !ready || loadFailed}
+                />
                 <p className="fineprint">{t.license}</p>
                 <details className="license-details">
                   <summary>GPLv3</summary>
@@ -1344,7 +1422,11 @@ export default function App() {
             <div className="modal-actions">
               {prompt ? (
                 <>
-                  <button className="secondary-button" onClick={() => setPrompt(null)}>
+                  <button
+                    className="secondary-button"
+                    disabled={busy}
+                    onClick={() => setPrompt(null)}
+                  >
                     {t.cancel}
                   </button>
                   <button
@@ -1357,9 +1439,22 @@ export default function App() {
                   >
                     {prompt.confirm}
                   </button>
+                  {prompt.saveAction && (
+                    <button
+                      className="primary-button"
+                      disabled={busy}
+                      onClick={() => {
+                        const action = prompt.saveAction!;
+                        setPrompt(null);
+                        action();
+                      }}
+                    >
+                      {prompt.saveLabel}
+                    </button>
+                  )}
                 </>
               ) : (
-                <button className="primary-button" onClick={() => setAbout(false)}>
+                <button className="primary-button" disabled={busy} onClick={() => setAbout(false)}>
                   {t.close}
                 </button>
               )}

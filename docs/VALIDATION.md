@@ -55,3 +55,12 @@ pnpm tauri build --bundles app,dmg
 ```
 
 Este ajuste es específico de este Mac y no forma parte de los requisitos generales. Los primeros intentos con SDK 27 y 15.5 fallaron; no se consideran compilaciones válidas.
+
+## Interfaz compacta y actualizador 0.2.0 (19 de octubre)
+
+- UI en commit `8f816a9`: componentes compartidos, controles compactos, ayuda de la selección actual, agrupación de herramientas y acceso móvil a Acerca de DRGG. Revisión de 1320×900, 780×620 y 390×844; WebKit nativo revisado en Apple Silicon.
+- Actualizador: 16 pruebas de lógica, 2 del ensamblador/firmas y 5 nativas Rust. Recorridos Playwright incluyen biblioteca, modelos de desarrollo y 6 casos del actualizador. Una comparación visual se ajustó a precisión de un decimal por una diferencia de coma flotante de 0,00003 px; una espera de scroll con cinco workers se repitió satisfactoriamente con dos. No se cambiaron criterios funcionales.
+- Ensayo nativo independiente 0.2.0 → 0.2.1: paquete alterado rechazado, descarga original aceptada, cancelar sin instalar, guardar antes de instalar, reinicio automático y recuperación del título y notas en la ficha. Versiones iguales/inferiores no ofrecidas y conexión rechazada mostrada como error recuperable.
+- SHA-256 de biblioteca y copia del ensayo: `f29fb2b89fd4fed6e6563eb090ae9ce128ccc266ca3f51e0c4b8d6cbeb702c13`. Se consumió el marcador de recuperación. Biblioteca original del usuario intacta: `f18134820e91a984b507c6ec1b5ea9ad860c6ac496171c6b4291354598d36565`.
+- La feature local `updater-e2e` se usa exclusivamente con identificador separado, clave de ensayo y endpoint loopback. Los paquetes de distribución se compilan sin esa feature, con HTTPS y clave pública de producción.
+- Pendiente de recorrido manual entre dos versiones: Windows EXE/MSI, Linux AppImage y macOS Intel. DEB/RPM tienen descarga manual. No hay certificados de distribución Windows ni notarización Apple; la firma criptográfica del actualizador sí se exige.

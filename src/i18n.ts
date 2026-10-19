@@ -136,7 +136,7 @@ const es = {
     'Las reglas del catálogo son una selección práctica y ampliable, no una lista exhaustiva de lo que permite cada motor.',
   about: 'Acerca de DRGG',
   aboutText:
-    'Una herramienta para decidir qué juego pequeño construir en 5–10 minutos. Sin IA, cuentas, telemetría ni servicios externos. Creada por kaizem (mar33k13).',
+    'Una herramienta para decidir qué juego pequeño construir en 5–10 minutos. Sin servicios de IA, cuentas ni telemetría. Actualizaciones manuales a través de GitHub. Creada por kaizem (mar33k13).',
   license:
     'GPL-3.0-only · Copyright © 2026 kaizem (mar33k13). Software sin garantía. Puedes modificarlo y redistribuirlo bajo GPLv3. La licencia completa y el código están en github.com/mar33k13/DRGG.',
   close: 'Cerrar',
@@ -270,7 +270,7 @@ const en: typeof es = {
     'Catalog rules are a practical, extensible selection, not an exhaustive list of engine capabilities.',
   about: 'About DRGG',
   aboutText:
-    'A tool to decide what small game to build in 5–10 minutes. No AI, accounts, telemetry or external services. Created by kaizem (mar33k13).',
+    'A tool to decide what small game to build in 5–10 minutes. No AI services, accounts or telemetry. Manual updates through GitHub. Created by kaizem (mar33k13).',
   license:
     'GPL-3.0-only · Copyright © 2026 kaizem (mar33k13). Provided without warranty. You may modify and redistribute it under GPLv3. Full license and source at github.com/mar33k13/DRGG.',
   close: 'Close',

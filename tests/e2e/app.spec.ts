@@ -149,7 +149,7 @@ test('shared layouts keep all stages, library and About inside the viewport', as
         await expect(
           page.getByRole('radio', { name: 'Unity', exact: true }),
         ).toHaveAccessibleDescription(/Componentes/);
-        expect((await engine.boundingBox())!.height).toBe(before!.height);
+        expect((await engine.boundingBox())!.height).toBeCloseTo(before!.height, 1);
       }
       const action = page.getByRole('button', {
         name: step === 4 ? 'Guardar concepto' : step === 3 ? 'Ver concepto' : 'Siguiente',
@@ -166,7 +166,9 @@ test('shared layouts keep all stages, library and About inside the viewport', as
     );
     await page.getByRole('button', { name: 'Acerca de DRGG', exact: true }).click();
     await expect(page.getByRole('dialog')).toBeInViewport();
-    await expect(page.getByRole('dialog').getByRole('heading')).toHaveText('Acerca de DRGG.');
+    await expect(page.getByRole('dialog').getByRole('heading', { level: 2 })).toHaveText(
+      'Acerca de DRGG.',
+    );
     await page.keyboard.press('Escape');
     await expect(page.getByRole('dialog')).toHaveCount(0);
   }

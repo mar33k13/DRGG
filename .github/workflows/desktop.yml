@@ -49,21 +49,48 @@ jobs:
       - uses: tauri-apps/tauri-action@v0
         with:
           args: --target ${{ matrix.target }}
-          tagName: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || '' }}
-          releaseName: DRGG ${{ github.ref_name }}
-          releaseBody: Offline desktop game concept generator. Unsigned initial builds; see README for platform notes.
-          releaseDraft: true
-          prerelease: true
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ''
+      - name: Stage packages with unique architecture names
+        run: node scripts/stage-packages.mjs src-tauri/target/${{ matrix.target }}/release/bundle release-packages ${{ matrix.os == 'macos-14' && 'aarch64' || 'x64' }}
       - uses: actions/upload-artifact@v4
         with:
           name: drgg-${{ matrix.name }}
-          path: |
-            src-tauri/target/${{ matrix.target }}/release/bundle/**/*.dmg
-            src-tauri/target/${{ matrix.target }}/release/bundle/**/*.exe
-            src-tauri/target/${{ matrix.target }}/release/bundle/**/*.msi
-            src-tauri/target/${{ matrix.target }}/release/bundle/**/*.deb
-            src-tauri/target/${{ matrix.target }}/release/bundle/**/*.rpm
-            src-tauri/target/${{ matrix.target }}/release/bundle/**/*.AppImage
+          path: release-packages/*
           if-no-files-found: error
+  assemble:
+    needs: package
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: drgg-*
+          merge-multiple: true
+          path: release-packages
+      - run: node --test scripts/*.test.mjs
+      - run: node scripts/prepare-release.mjs release-packages
+      - uses: actions/upload-artifact@v4
+        with:
+          name: drgg-release-complete
+          path: release-packages/*
+          if-no-files-found: error
+      - name: Prepare draft for tagged builds
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        shell: bash
+        run: |
+          version=$(node -p 'JSON.parse(require("fs").readFileSync("package.json")).version')
+          test "$RELEASE_TAG" = "v$version"
+          if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+            test "$(gh release view "$RELEASE_TAG" --json isDraft --jq .isDraft)" = true
+          else
+            gh release create "$RELEASE_TAG" --draft --prerelease --title "DRGG $version" --notes-file "docs/releases/$version.md"
+          fi
+          gh release upload "$RELEASE_TAG" release-packages/* --clobber

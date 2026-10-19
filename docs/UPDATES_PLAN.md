@@ -1,56 +1,46 @@
-# Propuesta: actualizar DRGG desde la aplicación
+# Actualizaciones desde DRGG
 
-19 de octubre de 2026. Estado: diseño para una próxima versión; el borrador 0.1.0 actual no incluye un actualizador. No se han creado claves ni configurado secretos de publicación.
+19 de octubre de 2026. Implementado en 0.2.0. La primera instalación de esta versión se hace mediante instalador; 0.1.0 no tiene actualizador.
 
-## Decisión propuesta
+## Experiencia
 
-Usar el complemento oficial de actualización de Tauri y GitHub Releases, aprovechando el repositorio y la matriz de compilación existentes. Comprobación manual inicialmente, sin cuenta de usuario, servidor propio ni instalación silenciosa al arrancar. La generación y la biblioteca siguen funcionando sin conexión.
+En **Acerca de DRGG → Actualizaciones**, la app muestra versión y revisión. La consulta es manual: no hay comprobación al arrancar, telemetría ni envío de conceptos o notas. Solo se accede a GitHub al solicitar una comprobación/descarga. Generación y biblioteca funcionan sin conexión.
 
-El complemento verifica paquetes firmados y admite un manifiesto estático por sistema/arquitectura. Proponemos `createUpdaterArtifacts: true`, HTTPS y clave pública incluida en DRGG. La clave privada se custodiaría como secreto de GitHub Actions y con copia de recuperación fuera del repositorio. La firma del actualizador es distinta de la firma/notarización exigida o recomendada por cada sistema. [Documentación de Tauri](https://v2.tauri.app/plugin/updater/).
+La consulta distingue una versión vigente de un fallo de conexión o canal todavía no disponible. Una versión nueva muestra novedades como texto seguro. Se puede seguir usando la app mientras descarga; el progreso no implica que la firma ya esté verificada. Solo un paquete verificado habilita **Instalar y reiniciar**. No se ejecutan dos operaciones a la vez.
 
-## Experiencia de uso
+Antes de reiniciar, los cambios pendientes ofrecen **Guardar e instalar**, **Descartar e instalar** o **Cancelar**. Un fallo al guardar detiene el proceso. La parte nativa verifica de nuevo el paquete, crea una copia exacta de la biblioteca en `backups/` y escribe el concepto/pantalla que se recuperarán al arrancar. Si falla la copia o el registro de sesión, no instala. El archivo de biblioteca permanece fuera del paquete.
 
-En **Acerca de DRGG → Actualizaciones**:
+## Integración y formatos
 
-1. Mostrar versión instalada, revisión y botón **Buscar actualizaciones**.
-2. Si hay una versión nueva, mostrar novedades, versión y **Descargar actualización**. Si no hay conexión, indicar que no se pudo comprobar y ofrecer reintento; no confundirlo con estar actualizado.
-3. Mostrar progreso de descarga y comprobación. Permitir seguir usando la app durante la descarga; evitar consultas o instalaciones simultáneas.
-4. Ofrecer **Instalar y reiniciar** cuando el paquete esté listo. Ante cambios sin guardar: **Guardar e instalar**, **Descartar e instalar** o **Cancelar**. Un guardado fallido impide instalar. Guardar también el estado mínimo para recuperar el concepto abierto.
-5. Tras reiniciar, mostrar la versión instalada y una confirmación discreta. Si falla la descarga o la comprobación, conservar la app actual y ofrecer reintento o acceso al instalador oficial.
+Se usa `tauri-plugin-updater`, con clave pública incluida, HTTPS, rechazo de versiones iguales/inferiores o prerelease y `requireSignedVersion: true`. La firma debe vincular también la versión anunciada. Los comandos nativos mantienen el paquete en memoria y restringen las URLs al repositorio oficial. El renderer no recibe permisos genéricos de updater/opener ni URLs arbitrarias para abrir. [Plugin oficial](https://v2.tauri.app/plugin/updater/).
 
-El guardado se completa antes de llamar al instalador: en Windows Tauri cierra el proceso para instalar. Las notas de versión se muestran como texto seguro, sin ejecutar HTML remoto. Los estados y mensajes se traducen a ES/EN. [Comportamiento de instalación](https://v2.tauri.app/plugin/updater/#windows-before-exit-hook).
+| Instalación                      | Comportamiento                                                                            |
+| -------------------------------- | ----------------------------------------------------------------------------------------- |
+| macOS Apple Silicon / Intel      | `.app.tar.gz` firmado, instalación y reinicio; DMG para instalación inicial.              |
+| Windows EXE / NSIS               | Actualiza con EXE firmado, asistente pasivo visible y reinicio.                           |
+| Windows MSI                      | Usa su propio MSI firmado; no cambia a NSIS.                                              |
+| Linux AppImage                   | Actualiza el AppImage si su ubicación permite escritura.                                  |
+| Linux DEB / RPM                  | Consulta la versión y abre el paquete oficial correspondiente para el gestor de paquetes. |
+| Desarrollo o formato desconocido | Descarga manual; instalación integrada deshabilitada.                                     |
 
-## Distribución
+La firma del actualizador es independiente de los certificados de distribución Windows y de la notarización Apple, aún no configurados. No se promete reversión automática de versiones. Para recuperar una versión anterior, conservar primero los datos actuales y usar un instalador y una copia de biblioteca compatibles.
 
-| Sistema                     | Ruta propuesta                                                                                                                                                             |
-| --------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| macOS Apple Silicon e Intel | Paquete de actualización `.app.tar.gz` firmado; DMG para instalación inicial.                                                                                              |
-| Windows x64                 | Instalador firmado correspondiente al formato instalado, con progreso visible. Verificar por separado NSIS/EXE y MSI; evitar cambiar de formato durante una actualización. |
-| Linux x64, AppImage         | Actualización de AppImage firmada si la ubicación permite escritura.                                                                                                       |
-| Linux, DEB/RPM              | Mostrar versión nueva y abrir el paquete correspondiente; conservar la instalación mediante el gestor de paquetes.                                                         |
+## Compilación y publicación
 
-Los formatos de actualización proceden de la [documentación oficial](https://v2.tauri.app/plugin/updater/#building). Las rutas por tipo de instalación y la experiencia de recuperación son decisiones propuestas para DRGG y necesitan pruebas reales.
+- La clave privada está fuera del repositorio, con una copia local protegida y el secreto cifrado `TAURI_SIGNING_PRIVATE_KEY` en el repositorio DRGG de GitHub. Nunca se incluye en código, logs, instaladores ni manifiestos. No rotarla sin planificar la transición de clientes que confían en la clave anterior.
+- Sincronizar versiones de package.json, Cargo y tauri.conf.json y añadir `docs/releases/VERSION.md`.
+- Actions compila los cuatro destinos desde un commit, genera firmas y reúne todo. Los archivos de actualización de Mac incluyen arquitectura en el nombre.
+- `scripts/prepare-release.mjs` exige los nueve paquetes (siete instaladores y dos actualizadores de Mac), verifica las firmas de los cinco formatos de actualización y su versión firmada, genera `latest.json` y SHA-256. Valida cualquier otra firma presente. Windows tiene entradas independientes NSIS/MSI.
+- `workflow_dispatch` produce `drgg-release-complete` sin publicar. Un tag `vVERSION` prepara únicamente un borrador y rechaza sobrescribir una release ya publicada.
+- El canal es `https://github.com/mar33k13/DRGG/releases/latest/download/latest.json`. GitHub excluye borradores y prereleases del canal estable. Hasta publicar una release estable con ese asset, la app indicará que el canal no está disponible. Nunca incrustar un token de GitHub en la app. [GitHub Releases](https://docs.github.com/en/rest/releases/releases#get-the-latest-release).
 
-## Versiones y publicación
+## Evidencia y límites de validación
 
-- Primera entrega con actualizador, por ejemplo **0.2.0**, instalada manualmente. La 0.1.0 no puede incorporar esta función por sí sola. Probar después una actualización real a **0.2.1**.
-- Una versión nueva por entrega; sincronizar package.json, Cargo y configuración Tauri. El borrador de prueba actual conserva 0.1.0 porque aún no se ha publicado; mostrar revisión de compilación en futuras entregas evitará ambigüedades.
-- Canal estable inicial con `https://github.com/mar33k13/DRGG/releases/latest/download/latest.json`. Ese recurso aún no existe: se incorporaría al preparar la primera versión compatible.
-- GitHub `latest` excluye borradores y prereleases. Por tanto, el borrador actual no se ofrecería a los usuarios. Un canal beta futuro necesita su propio manifiesto público; nunca incrustar un token de GitHub en la app. [Reglas de GitHub Releases](https://docs.github.com/en/rest/releases/releases#get-the-latest-release).
-- Compilar los cuatro destinos sobre un mismo commit, reunir instaladores, firmas y manifiesto, validar todas las entradas y preparar un borrador completo. Publicar una versión estable solo después de revisar ese conjunto. Conservar los artefactos de versiones publicadas sin sustituirlos.
-- La app solo consulta información de versión y descarga paquetes al solicitarlo. No enviar conceptos, notas o biblioteca; las peticiones siguen exponiendo al proveedor los metadatos normales de una conexión.
+- macOS Apple Silicon: recorrido real 0.2.0 → 0.2.1 con dos builds de ensayo, firma inválida rechazada, reintento válido, cancelación, guardado previo, instalación, reinicio y recuperación del concepto con sus notas. Biblioteca y backup idénticos byte por byte. Versiones iguales e inferiores no ofrecidas; fallo de conexión real distinguido de estar actualizado.
+- El ensayo usa un identificador `.update-test`, una clave de prueba y servidor loopback aislados. La feature `updater-e2e` rechaza arrancar con el identificador de producción. El transporte HTTP solo está en la configuración de prueba; no se distribuye ni se habilita en los builds normales.
+- Pruebas de interfaz cubren error de guardado, descarte sin persistir, descarga en segundo plano, errores, notas como texto, rutas manuales, recuperación y ES/EN en vistas pequeñas. Pruebas nativas cubren copia, límites, navegación y origen de descarga. El ensamblador rechaza payload, firma, versión y claves alterados o destinos ausentes.
+- Las compilaciones y pruebas automatizadas de Windows, Linux y Mac Intel se registran en [VALIDATION.md](VALIDATION.md). Un recorrido real entre versiones en esos tres entornos sigue pendiente: compilar no demuestra instalación/reinicio ni todos los casos de permisos del sistema. La entrega permanece como borrador de prueba.
 
-## Datos y recuperación
+## Repetir el ensayo local
 
-Antes de cualquier migración futura, crear una copia local de la biblioteca con su versión y verificar la escritura. Mantener la biblioteca fuera del paquete de aplicación. Si no se puede preservar el trabajo o crear la copia necesaria, explicar el fallo y detener la instalación/migración.
-
-No prometer una vuelta automática a versiones antiguas: pueden no leer el formato nuevo. Documentar recuperación manual con instalador anterior y copia compatible, conservando también los datos recientes para evitar pérdidas. Tratar instalaciones sin permisos de escritura como un caso explícito con descarga manual.
-
-## Entrega por partes
-
-1. **Integración nativa y pruebas de estados:** dependencias Tauri, permisos mínimos, consulta/descarga separadas, comprobación de versión y de firmas; servicio de actualización independiente del generador.
-2. **Interfaz y conservación del trabajo:** pantalla de actualizaciones, progreso, errores, novedades, guardado y reinicio. Reutilizar los componentes del [plan de interfaz](NEXT_UI.md).
-3. **Compilación y distribución:** claves custodiadas, paquetes firmados, manifiesto completo, versiones y proceso de borrador/publicación. Tratar certificados de distribución de macOS/Windows como preparación independiente.
-4. **Prueba entre dos versiones:** instalar A y actualizar a B en Windows, macOS ARM/Intel y Linux AppImage; comprobar bibliotecas, arquitectura, permisos, reinicio y versión. Para DEB/RPM, verificar la ruta al paquete correcto.
-
-Criterios de cierre: actualización real completada por plataforma; firma alterada rechazada; fallo de red recuperable; biblioteca intacta; cambios sin guardar protegidos; cancelación sin pérdida; versión igual/inferior no instalada; borrador no ofrecido por el canal estable. Una compilación correcta por sí sola no acredita estos recorridos.
+Crear dos configuraciones locales no versionadas con versiones A/B, productName de prueba, identificador terminado en `.update-test`, clave propia y endpoint `http://127.0.0.1:18472/latest.json`. Compilar ambas con `pnpm tauri build --features updater-e2e --config RUTA --bundles app`, proporcionando la clave por variable de entorno. Servir el `.app.tar.gz` de B y su firma, instalar A en un directorio de prueba y completar el recorrido en su UI. Alterar primero un byte del paquete para comprobar el rechazo. No usar la biblioteca ni el identificador de producción.

@@ -453,3 +453,74 @@
     bottom: 7px;
   }
 }
+
+/* Manual updates share the studio's compact panels and type scale. */
+.update-panel {
+  margin-top: 20px;
+  border-block: 1px solid var(--line);
+  padding: 18px 0;
+}
+.update-heading {
+  display: grid;
+  gap: 7px;
+}
+.update-heading h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 500;
+}
+.update-heading > span {
+  color: var(--muted);
+  font-size: 12px;
+}
+.update-heading strong {
+  color: var(--text);
+  font-weight: 500;
+}
+.update-heading small {
+  font-size: 10px;
+}
+.update-panel p {
+  line-height: 1.6;
+  font-size: 12px;
+}
+.update-status p {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.update-error {
+  color: #ffc29d;
+}
+.update-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  margin-top: 14px;
+}
+.update-notes {
+  margin-top: 12px;
+  font-size: 12px;
+}
+.update-notes p {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  max-height: 180px;
+  overflow: auto;
+}
+.update-progress {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  font-size: 11px;
+}
+.update-progress progress {
+  flex: 1;
+  min-width: 0;
+  height: 7px;
+  accent-color: var(--accent);
+}
+.modal-actions {
+  flex-wrap: wrap;
+}

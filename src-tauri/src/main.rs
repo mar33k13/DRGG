@@ -3,6 +3,7 @@
 use std::{fs, io::Write, path::{Path, PathBuf}};
 use tauri::{AppHandle, Manager};
 use tauri_plugin_dialog::DialogExt;
+mod updates;
 
 const MAX_IMPORT: u64 = 2_000_000;
 const MAX_LIBRARY: u64 = 32_000_000;
@@ -91,7 +92,18 @@ fn main() {
             }
         }))
         .plugin(tauri_plugin_dialog::init())
-        .invoke_handler(tauri::generate_handler![load_library, save_library, save_export, import_concept])
+        .plugin(tauri_plugin_updater::Builder::new().build())
+        .plugin(tauri_plugin_opener::init())
+        .manage(updates::UpdateState::default())
+        .setup(|app| {
+            if cfg!(feature = "updater-e2e") && !app.config().identifier.ends_with(".update-test") {
+                return Err("updater-e2e requires an isolated .update-test application identifier".into());
+            }
+            Ok(())
+        })
+        .invoke_handler(tauri::generate_handler![load_library, save_library, save_export, import_concept,
+            updates::update_info, updates::check_update, updates::download_update,
+            updates::install_update, updates::take_update_resume, updates::open_update_download])
         .run(tauri::generate_context!())
         .expect("DRGG could not start");
 }
