@@ -17,7 +17,7 @@ const es = {
   randomDesc: 'Una combinación inesperada. Un buen punto de partida.',
   welcome: 'TU PRÓXIMO JUEGO EMPIEZA AQUÍ',
   systemReady: 'SISTEMA LISTO',
-  localOnly: 'Sin IA. Sin cuentas. Tus ideas se quedan contigo.',
+  localOnly: 'Tus ideas, en tu equipo. Sin cuentas ni conexión.',
   openSource: 'CÓDIGO ABIERTO',
   by: 'por kaizem / mar33k13',
   steps: [
@@ -75,7 +75,7 @@ const es = {
   lock: 'Bloquear',
   unlock: 'Desbloquear',
   scopeReadout: 'LECTURA DE ALCANCE',
-  complexity: 'Complejidad',
+  complexity: 'Complejidad técnica',
   levels: ['Baja', 'Media', 'Alta'],
   teamEstimate: 'Equipo orientativo',
   actualTeam: 'Tu equipo',
@@ -109,7 +109,7 @@ const es = {
   changed: 'Se han ajustado las opciones relacionadas para mantener una combinación coherente.',
   error: 'No se pudo completar la operación.',
   invalidImport:
-    'El archivo no es un concepto DRGG válido (JSON v1). No se ha modificado la biblioteca.',
+    'El archivo no es un concepto DRGG válido (JSON v1/v2). No se ha modificado la biblioteca.',
   loadError:
     'No se ha podido leer la biblioteca. Para proteger tus datos, el guardado está desactivado. Conserva el archivo original y revisa el README.',
   retry: 'Reintentar',
@@ -159,7 +159,7 @@ const en: typeof es = {
   randomDesc: 'An unexpected combination. A good place to start.',
   welcome: 'YOUR NEXT GAME STARTS HERE',
   systemReady: 'SYSTEM READY',
-  localOnly: 'No AI. No accounts. Your ideas stay with you.',
+  localOnly: 'Your ideas, on your device. No accounts or connection.',
   openSource: 'OPEN SOURCE',
   by: 'by kaizem / mar33k13',
   steps: ['Set your limits', 'Find the idea', 'Pick your tools', 'Allocate effort', 'Your concept'],
@@ -211,7 +211,7 @@ const en: typeof es = {
   lock: 'Lock',
   unlock: 'Unlock',
   scopeReadout: 'SCOPE READOUT',
-  complexity: 'Complexity',
+  complexity: 'Technical complexity',
   levels: ['Low', 'Medium', 'High'],
   teamEstimate: 'Suggested team',
   actualTeam: 'Your team',
@@ -243,7 +243,7 @@ const en: typeof es = {
   lockedConflict: 'The locks prevent a coherent combination. Unlock a choice or use free mode.',
   changed: 'Related choices were adjusted to keep the combination coherent.',
   error: 'The operation could not be completed.',
-  invalidImport: 'This is not a valid DRGG concept (JSON v1). Your library was not changed.',
+  invalidImport: 'This is not a valid DRGG concept (JSON v1/v2). Your library was not changed.',
   loadError:
     'The library could not be read. Saving is disabled to protect your data. Keep the original file and check the README.',
   retry: 'Retry',

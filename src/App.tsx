@@ -49,6 +49,7 @@ import {
 } from './core';
 import { loadLibrary, openImport, saveExport, saveLibrary } from './storage';
 import { translations } from './i18n';
+import { aiAreas, developmentModes, developmentText } from './development';
 type Screen = 'home' | 'wizard' | 'library';
 type Prompt = { title: string; body: string; confirm: string; action: () => void };
 const stepFields: Field[][] = [
@@ -84,8 +85,9 @@ export default function App() {
     headingRef = useRef<HTMLHeadingElement>(null),
     modalRef = useRef<HTMLDivElement>(null),
     toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const t = translations[lang],
-    report = evaluate(draft.config, draft.priorities, lang);
+  const dt = developmentText[lang],
+    t = translations[lang],
+    report = evaluate(draft.config, draft.priorities, lang, draft.development);
   const notify = (msg: string) => {
     setToast(msg);
     if (toastTimer.current) clearTimeout(toastTimer.current);
@@ -384,6 +386,10 @@ export default function App() {
           ))}
         </div>
       </div>
+      <div className={`team-demand demand-${report.demand}`}>
+        <span>{dt.demand}</span>
+        <strong>{dt.demandLevels[report.demand]}</strong>
+      </div>
       <dl>
         <div>
           <dt>{t.teamEstimate}</dt>
@@ -398,6 +404,18 @@ export default function App() {
           <dd>{label('scope', draft.config.scope, lang)}</dd>
         </div>
       </dl>
+      <details className="development-rules">
+        <summary>{dt.guidance}</summary>
+        <p>
+          {dt.modes[draft.development.mode]} · {dt.workload}: {report.workScore} · {dt.capacity}:{' '}
+          {report.teamCapacity}
+        </p>
+        <ul>
+          {report.developmentReasons.map((r) => (
+            <li key={r}>{r}</li>
+          ))}
+        </ul>
+      </details>
       <div className="scope-focus">
         <span className="eyebrow">{t.focus}</span>
         <strong>{t.priorities[focus]}</strong>
@@ -680,6 +698,63 @@ export default function App() {
                         {stepFields[step].map((field, i) => renderField(field, i))}
                       </div>
                       {step === 0 && (
+                        <section className="development-panel" aria-labelledby="development-title">
+                          <h2 id="development-title">{dt.title}</h2>
+                          <p>{dt.hint}</p>
+                          <div className="development-options">
+                            {developmentModes.map((mode, i) => (
+                              <button
+                                key={mode}
+                                type="button"
+                                disabled={busy}
+                                aria-pressed={draft.development.mode === mode}
+                                onClick={() =>
+                                  update({
+                                    development: {
+                                      mode,
+                                      areas: mode === 'human' ? [] : [...draft.development.areas],
+                                    },
+                                  })
+                                }
+                              >
+                                <span className="micro">0{i + 1}</span>
+                                <strong>{dt.modes[mode]}</strong>
+                                <span>{dt.descriptions[mode]}</span>
+                                {draft.development.mode === mode && <Check size={16} />}
+                              </button>
+                            ))}
+                          </div>
+                          {draft.development.mode !== 'human' && (
+                            <fieldset className="ai-areas">
+                              <legend>{dt.areasTitle}</legend>
+                              <div>
+                                {aiAreas.map((area) => (
+                                  <label key={area}>
+                                    <input
+                                      type="checkbox"
+                                      disabled={busy}
+                                      checked={draft.development.areas.includes(area)}
+                                      onChange={(e) =>
+                                        update({
+                                          development: {
+                                            ...draft.development,
+                                            areas: e.target.checked
+                                              ? [...draft.development.areas, area]
+                                              : draft.development.areas.filter((a) => a !== area),
+                                          },
+                                        })
+                                      }
+                                    />
+                                    {dt.areas[area]}
+                                  </label>
+                                ))}
+                              </div>
+                              {!draft.development.areas.length && <p>{dt.chooseAreas}</p>}
+                            </fieldset>
+                          )}
+                        </section>
+                      )}
+                      {step === 0 && (
                         <div className="scope-tip">
                           <Orbit size={34} />
                           <div>
@@ -768,6 +843,12 @@ export default function App() {
                         onChange={(e) => update({ title: e.target.value })}
                       />
                       <p className="result-description">{report.description}</p>
+                      <div className="development-summary">
+                        <span>{dt.modes[draft.development.mode]}</span>
+                        {draft.development.areas.map((area) => (
+                          <span key={area}>{dt.areas[area]}</span>
+                        ))}
+                      </div>
                       <div className="result-tags">
                         {fields.map((k) => (
                           <span key={k} title={t.fieldNames[k]}>
@@ -912,7 +993,7 @@ export default function App() {
               ) : (
                 <div className="library-grid">
                   {library.map((c) => {
-                    const r = evaluate(c.config, c.priorities, lang);
+                    const r = evaluate(c.config, c.priorities, lang, c.development);
                     return (
                       <article className="saved-card" key={c.id}>
                         <div className="saved-top">
@@ -926,6 +1007,7 @@ export default function App() {
                         <div className="saved-tags">
                           <span>{label('engine', c.config.engine, lang)}</span>
                           <span>{label('dimension', c.config.dimension, lang)}</span>
+                          <span>{dt.modes[c.development.mode]}</span>
                         </div>
                         <time dateTime={c.updatedAt}>
                           {new Date(c.updatedAt).toLocaleDateString(

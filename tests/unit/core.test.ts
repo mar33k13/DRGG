@@ -107,7 +107,7 @@ describe('portable concepts', () => {
   it('rejects unsupported versions, unknown selections, invalid budgets and oversized files', () => {
     const c = makeConcept();
     for (const v of [
-      { format: 'drgg', version: 2, concept: c },
+      { format: 'drgg', version: 3, concept: c },
       {
         format: 'drgg',
         version: 1,
@@ -134,5 +134,69 @@ describe('portable concepts', () => {
         expect(output).toContain(lang === 'es' ? 'Prototipo' : 'Prototype');
       }
     }
+  });
+});
+
+describe('development context and migration', () => {
+  it('reads legacy concepts as human and retains assisted settings through export/import', () => {
+    const { development: _, ...legacy } = makeConcept();
+    expect(
+      parseImport(JSON.stringify({ format: 'drgg', version: 1, concept: legacy })).development,
+    ).toEqual({ mode: 'human', areas: [] });
+    const c = makeConcept();
+    c.development = { mode: 'hybrid', areas: ['code', 'art'] };
+    expect(parseImport(exportConcept(c, 'json', 'en')).development).toEqual(c.development);
+    for (const lang of ['es', 'en'] as const)
+      for (const format of ['md', 'txt'] as const) {
+        const text = exportConcept(c, format, lang);
+        expect(text).toContain(lang === 'es' ? 'Híbrido' : 'Hybrid');
+        expect(text).toContain(lang === 'es' ? 'Programación' : 'Programming');
+      }
+  });
+  it('rejects malformed models without silently treating them as human', () => {
+    for (const development of [
+      null,
+      { mode: 'unknown', areas: [] },
+      { mode: 'hybrid', areas: ['other'] },
+      { mode: 'ai', areas: ['code', 'code'] },
+      { mode: 'human', areas: ['art'] },
+    ]) {
+      expect(() => validateConcept({ ...makeConcept(), development })).toThrow();
+    }
+    const { development: _, ...legacy } = makeConcept();
+    expect(() =>
+      parseImport(JSON.stringify({ format: 'drgg', version: 2, concept: legacy })),
+    ).toThrow();
+  });
+  it('changes conditional team guidance without changing technical complexity', () => {
+    const c = { ...defaultConfig, scope: 'small' };
+    const p = { mechanics: 40, graphics: 30, physics: 10, narrative: 10, audio: 10 };
+    const human = evaluate(c, p, 'en');
+    const hybrid = evaluate(c, p, 'en', { mode: 'hybrid', areas: ['code', 'art'] });
+    expect(human.team).toBe('2–3 people');
+    expect(hybrid.team).toBe('1 person');
+    expect(hybrid.score).toBe(human.score);
+    expect(hybrid.complexity).toBe(human.complexity);
+    expect(hybrid.demand).toBeLessThanOrEqual(human.demand);
+    expect(hybrid.developmentReasons.join(' ')).toContain('validate and integrate');
+  });
+  it('protects network work and accounts for supervision, without inventing unspecified assistance', () => {
+    const c = { ...defaultConfig, mode: 'online' };
+    const human = evaluate(c, defaultPriorities, 'en');
+    const hybrid = evaluate(c, defaultPriorities, 'en', { mode: 'hybrid', areas: ['code'] });
+    const ai = evaluate(c, defaultPriorities, 'en', { mode: 'ai', areas: ['code'] });
+    expect(hybrid.workScore).toBe(human.workScore);
+    expect(ai.workScore).toBe(human.workScore + 1);
+    expect(evaluate(c, defaultPriorities, 'en', { mode: 'ai', areas: [] }).workScore).toBe(
+      human.workScore,
+    );
+  });
+  it('ties content assistance to selected priorities and keeps scores nonnegative', () => {
+    const p = { mechanics: 0, graphics: 0, physics: 0, narrative: 50, audio: 50 };
+    const c = { ...defaultConfig, scope: 'micro', dimension: '2d', style: 'pixel' };
+    const report = evaluate(c, p, 'es', { mode: 'hybrid', areas: ['narrative', 'audio'] });
+    expect(report.workScore).toBe(0);
+    expect(report.developmentReasons.join(' ')).toContain('Narrativa:');
+    expect(report.developmentReasons.join(' ')).toContain('Audio:');
   });
 });

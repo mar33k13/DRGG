@@ -1,3 +1,10 @@
+import {
+  aiAreas,
+  developmentModes,
+  defaultDevelopment,
+  developmentText,
+  type Development,
+} from './development';
 import catalogData from './data/catalog.json';
 import mechanicsData from './data/mechanics.json';
 import { translations } from './i18n';
@@ -28,6 +35,7 @@ export type Concept = {
   priorities: Priorities;
   locks: Field[];
   randomMode: RandomMode;
+  development: Development;
 };
 export const defaultConfig: Config = {
   theme: 'space',
@@ -137,7 +145,12 @@ export function rebalance(p: Priorities, key: Priority, value: number): Prioriti
     if (rest-- > 0) next[a.key]++;
   return next;
 }
-export function evaluate(c: Config, p: Priorities, lang: Lang) {
+export function evaluate(
+  c: Config,
+  p: Priorities,
+  lang: Lang,
+  development: Development = defaultDevelopment,
+) {
   const es = lang === 'es';
   const reasons: string[] = [];
   const warnings: string[] = [];
@@ -220,7 +233,36 @@ export function evaluate(c: Config, p: Priorities, lang: Lang) {
         ? 'La propuesta supera el alcance elegido. Recorta sistemas antes de añadir contenido.'
         : 'The concept exceeds your scope. Cut systems before adding content.',
     );
-  if (score > teamCapacity)
+  const dt = developmentText[lang];
+  const developmentReasons: string[] = [];
+  let support = 0;
+  const assisted = development.mode !== 'human' && development.areas.length > 0;
+  if (assisted) {
+    const eligible = {
+      code:
+        p.mechanics >= 30 &&
+        p.physics < 30 &&
+        !['online', 'competitive'].includes(c.mode) &&
+        c.platform !== 'console' &&
+        c.engine !== 'roblox',
+      art: p.graphics >= 25 && c.style !== 'realistic',
+      narrative: p.narrative >= 25,
+      audio: p.audio >= 25,
+    };
+    for (const area of aiAreas) {
+      if (development.areas.includes(area) && eligible[area]) {
+        support++;
+        developmentReasons.push(dt[area]);
+      }
+    }
+    if (!support) developmentReasons.push(dt.noCredit);
+    support = Math.min(support, development.mode === 'hybrid' ? 2 : 3);
+    if (development.mode === 'ai') developmentReasons.push(dt.review);
+    developmentReasons.push(dt.capped, dt.assumption, dt.responsibility);
+  } else developmentReasons.push(development.mode === 'human' ? dt.human : dt.noAreas);
+  const workScore = Math.max(0, score - support + (assisted && development.mode === 'ai' ? 1 : 0));
+  const demand = workScore <= teamCapacity - 3 ? 0 : workScore <= teamCapacity ? 1 : 2;
+  if (workScore > teamCapacity)
     warnings.push(
       es
         ? 'El equipo indicado puede asumir demasiado trabajo. Prueba una versión más pequeña.'
@@ -228,11 +270,11 @@ export function evaluate(c: Config, p: Priorities, lang: Lang) {
     );
   const complexity = score <= 3 ? 0 : score <= 7 ? 1 : 2;
   const team =
-    score <= 4
+    workScore <= 4
       ? es
         ? '1 persona'
         : '1 person'
-      : score <= 8
+      : workScore <= 8
         ? es
           ? '2–3 personas'
           : '2–3 people'
@@ -272,7 +314,20 @@ export function evaluate(c: Config, p: Priorities, lang: Lang) {
         ? 'Deja fuera mundo abierto, crafting extenso y generación procedural.'
         : 'Leave out open worlds, extensive crafting and procedural generation.',
   ];
-  return { score, complexity, team, reasons, warnings, description, mechanics, cuts };
+  return {
+    score,
+    complexity,
+    team,
+    reasons,
+    warnings,
+    description,
+    mechanics,
+    cuts,
+    workScore,
+    teamCapacity,
+    demand,
+    developmentReasons,
+  };
 }
 export function makeConcept(config = defaultConfig): Concept {
   const now = new Date().toISOString();
@@ -286,12 +341,13 @@ export function makeConcept(config = defaultConfig): Concept {
     priorities: { ...defaultPriorities },
     locks: [],
     randomMode: 'coherent',
+    development: { mode: 'human', areas: [] },
   };
 }
 function isRecord(x: unknown): x is Record<string, unknown> {
   return typeof x === 'object' && x !== null && !Array.isArray(x);
 }
-export function validateConcept(x: unknown): Concept {
+export function validateConcept(x: unknown, requireDevelopment = false): Concept {
   if (
     !isRecord(x) ||
     typeof x.id !== 'string' ||
@@ -328,6 +384,16 @@ export function validateConcept(x: unknown): Concept {
     !['coherent', 'free'].includes(x.randomMode as string)
   )
     throw new Error('Invalid generator settings');
+  const d = x.development === undefined && !requireDevelopment ? defaultDevelopment : x.development;
+  if (
+    !isRecord(d) ||
+    !developmentModes.includes(d.mode as Development['mode']) ||
+    !Array.isArray(d.areas) ||
+    !d.areas.every((a) => aiAreas.includes(a)) ||
+    new Set(d.areas).size !== d.areas.length ||
+    (d.mode === 'human' && d.areas.length > 0)
+  )
+    throw new Error('Invalid development model');
   // Return only known keys. Imported JSON is data, never executable instructions.
   return {
     id: x.id,
@@ -339,20 +405,21 @@ export function validateConcept(x: unknown): Concept {
     priorities: Object.fromEntries(priorityKeys.map((k) => [k, p[k]])) as Priorities,
     locks: x.locks as Field[],
     randomMode: x.randomMode as RandomMode,
+    development: { mode: d.mode as Development['mode'], areas: [...d.areas] },
   };
 }
 export function parseImport(raw: string): Concept {
   if (raw.length > 2_000_000) throw new Error('File too large');
   const value: unknown = JSON.parse(raw);
-  if (!isRecord(value) || value.format !== 'drgg' || value.version !== 1)
+  if (!isRecord(value) || value.format !== 'drgg' || ![1, 2].includes(value.version as number))
     throw new Error('Unsupported DRGG format');
-  const c = validateConcept(value.concept);
+  const c = validateConcept(value.concept, value.version === 2);
   const now = new Date().toISOString();
   return { ...c, id: crypto.randomUUID(), createdAt: now, updatedAt: now };
 }
 export function exportConcept(c: Concept, format: 'json' | 'md' | 'txt', lang: Lang): string {
-  if (format === 'json') return JSON.stringify({ format: 'drgg', version: 1, concept: c }, null, 2);
-  const r = evaluate(c.config, c.priorities, lang),
+  if (format === 'json') return JSON.stringify({ format: 'drgg', version: 2, concept: c }, null, 2);
+  const r = evaluate(c.config, c.priorities, lang, c.development),
     es = lang === 'es';
   const lines = [
     `# ${c.title || 'DRGG'}`,
@@ -361,12 +428,19 @@ export function exportConcept(c: Concept, format: 'json' | 'md' | 'txt', lang: L
     '',
     ...fields.map((k) => `- ${translations[lang].fieldNames[k]}: ${label(k, c.config[k], lang)}`),
     '',
+    `## ${developmentText[lang].title}`,
+    developmentText[lang].modes[c.development.mode],
+    ...c.development.areas.map((a) => `- ${developmentText[lang].areas[a]}`),
+    '',
     `## ${es ? 'Prioridades' : 'Priorities'}`,
     ...priorityKeys.map((k) => `- ${translations[lang].priorities[k]}: ${c.priorities[k]}%`),
     '',
     `## ${es ? 'Orientación de alcance' : 'Scope guidance'}`,
     `${[es ? 'Baja' : 'Low', es ? 'Media' : 'Medium', es ? 'Alta' : 'High'][r.complexity]} · ${r.team}`,
     ...r.reasons.map((s) => `- ${s}`),
+    `${developmentText[lang].demand}: ${developmentText[lang].demandLevels[r.demand]}`,
+    `${developmentText[lang].workload}: ${r.workScore} / ${developmentText[lang].capacity}: ${r.teamCapacity}`,
+    ...r.developmentReasons.map((s) => `- ${s}`),
     ...r.warnings.map((s) => `- ⚠ ${s}`),
     '',
     `## ${es ? 'Prototipo' : 'Prototype'}`,

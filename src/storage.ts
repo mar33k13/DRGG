@@ -5,15 +5,19 @@ export async function loadLibrary(): Promise<Concept[]> {
   const raw = isTauri() ? await invoke<string | null>('load_library') : localStorage.getItem(KEY);
   if (!raw) return [];
   const data = JSON.parse(raw);
-  if (data.version !== 1 || !Array.isArray(data.concepts) || data.concepts.length > 5000)
+  if (
+    ![1, 2].includes(data.version) ||
+    !Array.isArray(data.concepts) ||
+    data.concepts.length > 5000
+  )
     throw new Error('Invalid library');
-  const concepts = data.concepts.map(validateConcept);
+  const concepts = data.concepts.map((c: unknown) => validateConcept(c, data.version === 2));
   if (new Set(concepts.map((c: Concept) => c.id)).size !== concepts.length)
     throw new Error('Duplicate concept IDs');
   return concepts;
 }
 export async function saveLibrary(concepts: Concept[]): Promise<void> {
-  const contents = JSON.stringify({ version: 1, concepts });
+  const contents = JSON.stringify({ version: 2, concepts });
   if (isTauri()) await invoke('save_library', { contents });
   else localStorage.setItem(KEY, contents);
 }

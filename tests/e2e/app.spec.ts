@@ -131,3 +131,43 @@ test('responsive layout stays inside the viewport and keyboard controls remain r
   await expect(page.getByLabel('Objetivo del proyecto', { exact: true })).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
 });
+
+test('development model survives rolls, persistence and JSON export with visible guidance', async ({
+  page,
+}) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: /01 \/ MANUAL/ }).click();
+  await page.getByRole('button', { name: /Híbrido/ }).click();
+  await page.getByRole('checkbox', { name: 'Programación', exact: true }).check();
+  await page.getByRole('checkbox', { name: 'Arte', exact: true }).check();
+  await page.getByRole('button', { name: 'Volver a sortear' }).click();
+  await expect(page.getByRole('button', { name: /Híbrido/ })).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  );
+  await expect(page.getByRole('checkbox', { name: 'Programación', exact: true })).toBeChecked();
+  await page.getByText('Cómo influye tu modelo', { exact: true }).click();
+  await expect(page.getByText(/Escenario orientativo: el apoyo/)).toBeVisible();
+  await page.getByRole('button', { name: 'Tu concepto', exact: false }).click();
+  await page.getByLabel('Nombre del concepto').fill('Equipo híbrido');
+  await page.getByRole('button', { name: 'Guardar concepto', exact: true }).click();
+  await expect(page.getByRole('status')).toContainText('Concepto guardado');
+  const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('drgg.library.v1')!));
+  expect(saved.version).toBe(2);
+  expect(saved.concepts[0].development).toEqual({ mode: 'hybrid', areas: ['code', 'art'] });
+  await page.reload();
+  await page.getByRole('button', { name: /Biblioteca/ }).click();
+  await page.getByRole('button', { name: 'Abrir', exact: true }).click();
+  await expect(page.locator('.development-summary')).toContainText('Híbrido');
+  const downloadEvent = page.waitForEvent('download');
+  await page.getByRole('button', { name: 'JSON', exact: true }).click();
+  const downloaded = await downloadEvent;
+  const stream = await downloaded.createReadStream();
+  const chunks = [];
+  for await (const chunk of stream) chunks.push(chunk);
+  const exported = JSON.parse(Buffer.concat(chunks).toString());
+  expect(exported.version).toBe(2);
+  expect(exported.concept.development).toEqual(saved.concepts[0].development);
+  await page.getByRole('button', { name: 'EN', exact: true }).click();
+  await expect(page.locator('.development-summary')).toContainText('Hybrid');
+});
