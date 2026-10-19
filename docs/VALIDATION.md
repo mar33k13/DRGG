@@ -15,9 +15,13 @@
 
 Paquete macOS Apple Silicon local: `DRGG_0.1.0_aarch64.dmg`. SHA-256: `0568fae7dc2e4845f52e98c6aeceffa7b313973a62249846284b6f90425c751f`. Sin firma de distribución/notarización.
 
+## Compilaciones en GitHub
+
+[Desktop packages](https://github.com/mar33k13/DRGG/actions/runs/39244667554), commit de aplicación `2eabc37142b6585e8430e3ad6feaa7324a76c5a8`: pruebas Rust y empaquetado superados en macOS Apple Silicon, macOS Intel, Windows x64 y Linux x64. Instaladores generados: DMG para ambas arquitecturas macOS; EXE y MSI para Windows; AppImage, DEB y RPM para Linux. No se afirma ejecución manual de esos instaladores fuera del Mac Apple Silicon local.
+
 ## Límites
 
-Windows, Linux y macOS Intel requieren compilación y pruebas de ejecución propias. Los workflows de Actions preparan esas compilaciones, pero su existencia no demuestra que hayan pasado. La firma/notarización no está configurada. No se han validado instaladores en equipos ajenos ni lectura de bibliotecas de versiones futuras. Las referencias de licencia de paquetes sin archivos de licencia propios deben revisarse antes de una distribución de producción.
+La ejecución real en Windows, Linux y macOS Intel sigue pendiente de revisión en sus sistemas; una compilación correcta no la sustituye. La firma/notarización no está configurada. No se han validado instaladores en equipos ajenos ni lectura de bibliotecas de versiones futuras. Las referencias de licencia de paquetes sin archivos de licencia propios deben revisarse antes de una distribución de producción.
 
 ## Herramientas locales
 
