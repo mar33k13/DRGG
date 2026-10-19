@@ -61,6 +61,8 @@ pnpm tauri build          # Instalador del sistema actual
 
 Actions comprueba la interfaz y prepara paquetes para macOS Apple Silicon/Intel, Windows x64 y Linux x64. Los paquetes se descargan desde las ejecuciones como artifacts. Compilar no equivale a probar manualmente cada sistema. Los tags `v*` preparan una **release en borrador** que el mantenedor revisa y publica. Las compilaciones iniciales no están firmadas ni notarizadas: el sistema puede mostrar avisos o bloquear la apertura hasta que el usuario la autorice. La firma necesita certificados propios. Windows ARM y Linux ARM quedan fuera de la matriz inicial.
 
+Próximas iteraciones propuestas: [unificación y compactación de la interfaz](docs/NEXT_UI.md) y [actualizaciones desde la aplicación](docs/UPDATES_PLAN.md). Son planes; la versión 0.1.0 todavía se actualiza mediante instalador.
+
 ## Contribuir
 
 Lee [CONTRIBUTING.md](CONTRIBUTING.md). Catálogo: `src/data/catalog.json`; mecánicas: `src/data/mechanics.json`; traducciones: `src/i18n.ts`, `src/development.ts` y `src/choiceDetails.ts`; reglas: `src/core.ts`. Consulta [el alcance acordado](docs/PRODUCT.md) y [las reglas](docs/COMPLEXITY.md). No se incluyen recursos de Game Dev Tycoon ni logos comerciales. Las marcas se usan como nombres descriptivos, sin afiliación.
