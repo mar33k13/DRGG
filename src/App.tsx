@@ -25,6 +25,8 @@ import {
   Gamepad2,
   Radio,
   ScanLine,
+  CirclePause,
+  CirclePlay,
 } from 'lucide-react';
 import { isTauri } from '@tauri-apps/api/core';
 import { getCurrentWindow } from '@tauri-apps/api/window';
@@ -50,6 +52,7 @@ import {
 import { loadLibrary, openImport, saveExport, saveLibrary } from './storage';
 import { translations } from './i18n';
 import { choiceDetails } from './choiceDetails';
+import { useMotion } from './useMotion';
 import { aiAreas, developmentModes, developmentText } from './development';
 type Screen = 'home' | 'wizard' | 'library';
 type Prompt = { title: string; body: string; confirm: string; action: () => void };
@@ -67,6 +70,9 @@ function initialLang(): Lang {
   }
 }
 export default function App() {
+  const { reducedMotion, reducedBySystem, toggleMotion } = useMotion();
+  const [roll, setRoll] = useState({ id: 0, fields: [] as Field[] });
+  const [savedId, setSavedId] = useState<string | null>(null);
   const [lang, setLang] = useState<Lang>(initialLang),
     [screen, setScreen] = useState<Screen>('home'),
     [step, setStep] = useState(0);
@@ -82,6 +88,7 @@ export default function App() {
     [toast, setToast] = useState(''),
     [prompt, setPrompt] = useState<Prompt | null>(null),
     [about, setAbout] = useState(false);
+  const wizardRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null),
     headingRef = useRef<HTMLHeadingElement>(null),
     modalRef = useRef<HTMLDivElement>(null),
@@ -168,10 +175,34 @@ export default function App() {
       stop?.();
     };
   }, [dirty, busy, lang]);
+  useEffect(() => {
+    if (reducedMotion || !roll.id) return;
+    const animations: Animation[] = [];
+    let index = 0;
+    for (const field of roll.fields) {
+      const element = wizardRef.current?.querySelector<HTMLElement>(`[data-field="${field}"]`);
+      if (element)
+        animations.push(
+          element.animate(
+            [
+              { opacity: 0.55, transform: 'translateY(7px)', borderColor: '#f09a68' },
+              {
+                opacity: 1,
+                transform: 'translateY(0)',
+                borderColor: getComputedStyle(element).borderColor,
+              },
+            ],
+            { duration: 360, delay: index++ * 30, easing: 'cubic-bezier(.2,.7,.2,1)' },
+          ),
+        );
+    }
+    return () => animations.forEach((animation) => animation.cancel());
+  }, [roll, reducedMotion]);
   const update = (patch: Partial<Concept>) => {
     if (busy) return;
     setDraft((d) => ({ ...d, ...patch, updatedAt: new Date().toISOString() }));
     setDirty(true);
+    setSavedId(null);
   };
   const guarded = (action: () => void) => {
     if (busy) return;
@@ -189,7 +220,12 @@ export default function App() {
   };
   const start = (random: boolean) =>
     guarded(() => {
-      const c = { ...makeConcept(), locks: ['team', 'scope'] as Field[] };
+      const c = {
+        ...makeConcept(),
+        development: structuredClone(draft.development),
+        locks: ['team', 'scope'] as Field[],
+      };
+      setSavedId(null);
       if (random) c.config = generate(c.config, c.locks, 'coherent')!;
       setDraft(c);
       setDirty(false);
@@ -222,6 +258,10 @@ export default function App() {
       notify(t.lockedConflict);
       return;
     }
+    setRoll((previous) => ({
+      id: previous.id + 1,
+      fields: fields.filter((k) => next[k] !== draft.config[k] && !draft.locks.includes(k)),
+    }));
     update({ config: next });
   };
   const changeMode = (mode: RandomMode) => {
@@ -263,6 +303,7 @@ export default function App() {
     if (await persist(next, t.saved)) {
       setDraft(c);
       setDirty(false);
+      setSavedId(c.id);
     }
   };
   const importRaw = async (raw: string) => {
@@ -353,7 +394,11 @@ export default function App() {
               })
             }
           >
-            {locked ? <LockKeyhole size={15} /> : <LockKeyholeOpen size={15} />}
+            {locked ? (
+              <LockKeyhole key="locked" size={15} />
+            ) : (
+              <LockKeyholeOpen key="unlocked" size={15} />
+            )}
           </button>
         </div>
         {cards ? (
@@ -421,7 +466,7 @@ export default function App() {
       </div>
       <div className={`complexity-meter level-${report.complexity}`}>
         <span>{t.complexity}</span>
-        <strong>{t.levels[report.complexity]}</strong>
+        <strong key={report.complexity}>{t.levels[report.complexity]}</strong>
         <div className="meter-segments">
           {Array.from({ length: 15 }, (_, i) => (
             <i className={i < (report.complexity + 1) * 5 ? 'lit' : ''} key={i} />
@@ -571,6 +616,24 @@ export default function App() {
             </span>
           </span>
           <div className="topbar-right">
+            <button
+              className="motion-toggle icon-button"
+              aria-pressed={reducedMotion}
+              disabled={reducedBySystem}
+              aria-label={lang === 'es' ? 'Reducir animaciones' : 'Reduce animations'}
+              title={
+                reducedBySystem
+                  ? lang === 'es'
+                    ? 'Movimiento reducido por el sistema'
+                    : 'Reduced motion set by your system'
+                  : lang === 'es'
+                    ? 'Reducir animaciones'
+                    : 'Reduce animations'
+              }
+              onClick={toggleMotion}
+            >
+              {reducedMotion ? <CirclePlay size={18} /> : <CirclePause size={18} />}
+            </button>
             <span className="offline">
               <span className="status-dot" />
               {t.offline}
@@ -687,8 +750,8 @@ export default function App() {
             </div>
           )}
           {screen === 'wizard' && (
-            <div className={`wizard-screen ${step === 4 ? 'is-result' : ''}`}>
-              <div className="page-heading">
+            <div ref={wizardRef} className={`wizard-screen ${step === 4 ? 'is-result' : ''}`}>
+              <div className="page-heading" key={step}>
                 <div>
                   <span className="eyebrow">
                     CONCEPT LAB{' '}
@@ -727,259 +790,277 @@ export default function App() {
                       </button>
                     </div>
                     <button className="reroll" onClick={reroll}>
-                      <Shuffle size={15} />
+                      <Shuffle key={roll.id} className={roll.id ? 'roll-icon' : ''} size={15} />
                       {t.reroll}
                     </button>
                   </div>
                   <p className="generator-hint">
                     {draft.randomMode === 'coherent' ? t.coherentHint : t.freeHint}
                   </p>
-                  {step < 3 && (
-                    <>
-                      <div className={`field-grid ${step === 1 ? 'concept-fields' : ''}`}>
-                        {stepFields[step].map((field, i) => renderField(field, i))}
-                      </div>
-                      {step === 0 && (
-                        <section className="development-panel" aria-labelledby="development-title">
-                          <h2 id="development-title">{dt.title}</h2>
-                          <p>{dt.hint}</p>
-                          <div className="development-options">
-                            {developmentModes.map((mode, i) => (
-                              <button
-                                key={mode}
-                                type="button"
-                                disabled={busy}
-                                aria-pressed={draft.development.mode === mode}
-                                onClick={() =>
-                                  update({
-                                    development: {
-                                      mode,
-                                      areas: mode === 'human' ? [] : [...draft.development.areas],
-                                    },
-                                  })
-                                }
-                              >
-                                <span className="micro">0{i + 1}</span>
-                                <strong>{dt.modes[mode]}</strong>
-                                <span>{dt.descriptions[mode]}</span>
-                                {draft.development.mode === mode && <Check size={16} />}
-                              </button>
-                            ))}
-                          </div>
-                          {draft.development.mode !== 'human' && (
-                            <fieldset className="ai-areas">
-                              <legend>{dt.areasTitle}</legend>
-                              <div>
-                                {aiAreas.map((area) => (
-                                  <label key={area}>
-                                    <input
-                                      type="checkbox"
-                                      disabled={busy}
-                                      checked={draft.development.areas.includes(area)}
-                                      onChange={(e) =>
-                                        update({
-                                          development: {
-                                            ...draft.development,
-                                            areas: e.target.checked
-                                              ? [...draft.development.areas, area]
-                                              : draft.development.areas.filter((a) => a !== area),
-                                          },
-                                        })
-                                      }
-                                    />
-                                    {dt.areas[area]}
-                                  </label>
-                                ))}
-                              </div>
-                              {!draft.development.areas.length && <p>{dt.chooseAreas}</p>}
-                            </fieldset>
-                          )}
-                        </section>
-                      )}
-                      {step === 0 && (
-                        <div className="scope-tip">
-                          <Orbit size={34} />
-                          <div>
-                            <span className="eyebrow">START SMALL</span>
-                            <p>
-                              {lang === 'es'
-                                ? 'Una mecánica que funcione vale más que diez a medias. El equipo y el objetivo empiezan bloqueados para que el azar respete tus límites.'
-                                : 'One working mechanic beats ten unfinished ones. Your team and goal start locked so randomization respects your limits.'}
-                            </p>
-                          </div>
+                  <div className="stage-panel" key={step}>
+                    {step < 3 && (
+                      <>
+                        <div className={`field-grid ${step === 1 ? 'concept-fields' : ''}`}>
+                          {stepFields[step].map((field, i) => renderField(field, i))}
                         </div>
-                      )}
-                      {step === 1 && (
-                        <div className="concept-preview">
-                          <span className="eyebrow">CONCEPT SIGNAL</span>
-                          <p>{report.description}</p>
-                          <div className="signal-line" />
-                        </div>
-                      )}
-                      {step === 2 && (
-                        <p className="fineprint tool-note">
-                          {draft.config.platform === 'console' ? t.consolesNote : t.catalogNote}
-                        </p>
-                      )}
-                    </>
-                  )}
-                  {step === 3 && (
-                    <div className="effort-panel">
-                      <div className="effort-header">
-                        <span className="eyebrow">{t.budget}</span>
-                        <strong>
-                          100<small>/ 100</small>
-                        </strong>
-                      </div>
-                      {priorityKeys.map((k, i) => (
-                        <div className="priority-row" key={k}>
-                          <div className="priority-label">
-                            <label htmlFor={`priority-${k}`}>
-                              <span className="micro">0{i + 1}</span>
-                              {t.priorities[k]}
-                            </label>
-                            <output htmlFor={`priority-${k}`}>
-                              {draft.priorities[k]}
-                              <small>%</small>
-                            </output>
+                        {step === 0 && (
+                          <section
+                            className="development-panel"
+                            aria-labelledby="development-title"
+                          >
+                            <h2 id="development-title">{dt.title}</h2>
+                            <p>{dt.hint}</p>
+                            <div className="development-options">
+                              {developmentModes.map((mode, i) => (
+                                <button
+                                  key={mode}
+                                  type="button"
+                                  disabled={busy}
+                                  aria-pressed={draft.development.mode === mode}
+                                  onClick={() =>
+                                    update({
+                                      development: {
+                                        mode,
+                                        areas: mode === 'human' ? [] : [...draft.development.areas],
+                                      },
+                                    })
+                                  }
+                                >
+                                  <span className="micro">0{i + 1}</span>
+                                  <strong>{dt.modes[mode]}</strong>
+                                  <span>{dt.descriptions[mode]}</span>
+                                  {draft.development.mode === mode && <Check size={16} />}
+                                </button>
+                              ))}
+                            </div>
+                            {draft.development.mode !== 'human' && (
+                              <fieldset className="ai-areas">
+                                <legend>{dt.areasTitle}</legend>
+                                <div>
+                                  {aiAreas.map((area) => (
+                                    <label key={area}>
+                                      <input
+                                        type="checkbox"
+                                        disabled={busy}
+                                        checked={draft.development.areas.includes(area)}
+                                        onChange={(e) =>
+                                          update({
+                                            development: {
+                                              ...draft.development,
+                                              areas: e.target.checked
+                                                ? [...draft.development.areas, area]
+                                                : draft.development.areas.filter((a) => a !== area),
+                                            },
+                                          })
+                                        }
+                                      />
+                                      {dt.areas[area]}
+                                    </label>
+                                  ))}
+                                </div>
+                                {!draft.development.areas.length && <p>{dt.chooseAreas}</p>}
+                              </fieldset>
+                            )}
+                          </section>
+                        )}
+                        {step === 0 && (
+                          <div className="scope-tip">
+                            <Orbit size={34} />
+                            <div>
+                              <span className="eyebrow">START SMALL</span>
+                              <p>
+                                {lang === 'es'
+                                  ? 'Una mecánica que funcione vale más que diez a medias. El equipo y el objetivo empiezan bloqueados para que el azar respete tus límites.'
+                                  : 'One working mechanic beats ten unfinished ones. Your team and goal start locked so randomization respects your limits.'}
+                              </p>
+                            </div>
                           </div>
-                          <input
-                            id={`priority-${k}`}
-                            aria-label={t.priorities[k]}
-                            disabled={busy}
-                            type="range"
-                            min="0"
-                            max="100"
-                            value={draft.priorities[k]}
-                            style={{ '--fill': `${draft.priorities[k]}%` } as React.CSSProperties}
-                            onChange={(e) =>
-                              update({
-                                priorities: rebalance(draft.priorities, k, Number(e.target.value)),
-                              })
-                            }
-                          />
-                          <p>{t.priorityDescriptions[k]}</p>
+                        )}
+                        {step === 1 && (
+                          <div className="concept-preview">
+                            <span className="eyebrow">CONCEPT SIGNAL</span>
+                            <p>{report.description}</p>
+                            <div className="signal-line" />
+                          </div>
+                        )}
+                        {step === 2 && (
+                          <p className="fineprint tool-note">
+                            {draft.config.platform === 'console' ? t.consolesNote : t.catalogNote}
+                          </p>
+                        )}
+                      </>
+                    )}
+                    {step === 3 && (
+                      <div className="effort-panel">
+                        <div className="effort-header">
+                          <span className="eyebrow">{t.budget}</span>
+                          <strong>
+                            100<small>/ 100</small>
+                          </strong>
                         </div>
-                      ))}
-                      <p className="fineprint">{t.budgetHint}</p>
-                      <button
-                        className="text-button"
-                        onClick={() => update({ priorities: { ...defaultPriorities } })}
-                      >
-                        {lang === 'es' ? 'Restablecer reparto' : 'Reset allocation'}
-                      </button>
-                    </div>
-                  )}
-                  {step === 4 && (
-                    <div className="result-panel">
-                      <div
-                        className={`concept-banner theme-${draft.config.theme}`}
-                        aria-hidden="true"
-                      >
-                        <div className="banner-orbit" />
-                        <span>CONCEPT / {label('theme', draft.config.theme, lang)}</span>
-                        <span>
-                          {label('engine', draft.config.engine, lang)} ·{' '}
-                          {label('dimension', draft.config.dimension, lang)}
-                        </span>
-                      </div>
-                      <label className="eyebrow" htmlFor="concept-title">
-                        {t.title}
-                      </label>
-                      <input
-                        className="title-input"
-                        id="concept-title"
-                        disabled={busy}
-                        maxLength={120}
-                        placeholder={t.titlePlaceholder}
-                        value={draft.title}
-                        onChange={(e) => update({ title: e.target.value })}
-                      />
-                      <p className="result-description">{report.description}</p>
-                      <div className="development-summary">
-                        <span>{dt.modes[draft.development.mode]}</span>
-                        {draft.development.areas.map((area) => (
-                          <span key={area}>{dt.areas[area]}</span>
-                        ))}
-                      </div>
-                      <details className="result-specs">
-                        <summary>
-                          {lang === 'es' ? 'Ver todas las decisiones' : 'View all decisions'}
-                        </summary>
-                        <div className="result-tags">
-                          {fields.map((k) => (
-                            <span key={k} title={t.fieldNames[k]}>
-                              {label(k, draft.config[k], lang)}
-                            </span>
+                        <div className="effort-stack" aria-hidden="true">
+                          {priorityKeys.map((k) => (
+                            <i
+                              key={k}
+                              className={`effort-${k}`}
+                              style={{ width: `${draft.priorities[k]}%` }}
+                            />
                           ))}
                         </div>
-                      </details>
-                      <div className="result-columns">
-                        <div className="result-block">
-                          <h2>
-                            <Gamepad2 size={18} />
-                            {t.prototype}
-                          </h2>
-                          <ol>
-                            {report.mechanics.map((m, i) => (
-                              <li key={m}>
-                                <span>0{i + 1}</span>
-                                {m}
-                              </li>
-                            ))}
-                          </ol>
+                        {priorityKeys.map((k, i) => (
+                          <div className="priority-row" key={k}>
+                            <div className="priority-label">
+                              <label htmlFor={`priority-${k}`}>
+                                <span className="micro">0{i + 1}</span>
+                                {t.priorities[k]}
+                              </label>
+                              <output htmlFor={`priority-${k}`}>
+                                {draft.priorities[k]}
+                                <small>%</small>
+                              </output>
+                            </div>
+                            <input
+                              id={`priority-${k}`}
+                              aria-label={t.priorities[k]}
+                              disabled={busy}
+                              type="range"
+                              min="0"
+                              max="100"
+                              value={draft.priorities[k]}
+                              style={{ '--fill': `${draft.priorities[k]}%` } as React.CSSProperties}
+                              onChange={(e) =>
+                                update({
+                                  priorities: rebalance(
+                                    draft.priorities,
+                                    k,
+                                    Number(e.target.value),
+                                  ),
+                                })
+                              }
+                            />
+                            <p>{t.priorityDescriptions[k]}</p>
+                          </div>
+                        ))}
+                        <p className="fineprint">{t.budgetHint}</p>
+                        <button
+                          className="text-button"
+                          onClick={() => update({ priorities: { ...defaultPriorities } })}
+                        >
+                          {lang === 'es' ? 'Restablecer reparto' : 'Reset allocation'}
+                        </button>
+                      </div>
+                    )}
+                    {step === 4 && (
+                      <div className="result-panel">
+                        <div
+                          className={`concept-banner theme-${draft.config.theme}`}
+                          aria-hidden="true"
+                        >
+                          <div className="banner-orbit" />
+                          <span>CONCEPT / {label('theme', draft.config.theme, lang)}</span>
+                          <span>
+                            {label('engine', draft.config.engine, lang)} ·{' '}
+                            {label('dimension', draft.config.dimension, lang)}
+                          </span>
                         </div>
-                        <div className="result-block cuts-block">
-                          <h2>
-                            <Layers3 size={17} />
-                            {t.cuts}
-                          </h2>
+                        <label className="eyebrow" htmlFor="concept-title">
+                          {t.title}
+                        </label>
+                        <input
+                          className="title-input"
+                          id="concept-title"
+                          disabled={busy}
+                          maxLength={120}
+                          placeholder={t.titlePlaceholder}
+                          value={draft.title}
+                          onChange={(e) => update({ title: e.target.value })}
+                        />
+                        <p className="result-description">{report.description}</p>
+                        <div className="development-summary">
+                          <span>{dt.modes[draft.development.mode]}</span>
+                          {draft.development.areas.map((area) => (
+                            <span key={area}>{dt.areas[area]}</span>
+                          ))}
+                        </div>
+                        <details className="result-specs">
+                          <summary>
+                            {lang === 'es' ? 'Ver todas las decisiones' : 'View all decisions'}
+                          </summary>
+                          <div className="result-tags">
+                            {fields.map((k) => (
+                              <span key={k} title={t.fieldNames[k]}>
+                                {label(k, draft.config[k], lang)}
+                              </span>
+                            ))}
+                          </div>
+                        </details>
+                        <div className="result-columns">
+                          <div className="result-block">
+                            <h2>
+                              <Gamepad2 size={18} />
+                              {t.prototype}
+                            </h2>
+                            <ol>
+                              {report.mechanics.map((m, i) => (
+                                <li key={m}>
+                                  <span>0{i + 1}</span>
+                                  {m}
+                                </li>
+                              ))}
+                            </ol>
+                          </div>
+                          <div className="result-block cuts-block">
+                            <h2>
+                              <Layers3 size={17} />
+                              {t.cuts}
+                            </h2>
+                            <ul>
+                              {report.cuts.map((m) => (
+                                <li key={m}>{m}</li>
+                              ))}
+                            </ul>
+                          </div>
+                        </div>
+                        <details className="result-block result-reasons">
+                          <summary>{t.why}</summary>
                           <ul>
-                            {report.cuts.map((m) => (
-                              <li key={m}>{m}</li>
+                            {report.reasons.map((r) => (
+                              <li key={r}>{r}</li>
                             ))}
                           </ul>
-                        </div>
-                      </div>
-                      <details className="result-block result-reasons">
-                        <summary>{t.why}</summary>
-                        <ul>
-                          {report.reasons.map((r) => (
-                            <li key={r}>{r}</li>
+                        </details>
+                        <label className="eyebrow" htmlFor="notes">
+                          {t.notes}
+                        </label>
+                        <textarea
+                          id="notes"
+                          disabled={busy}
+                          rows={3}
+                          maxLength={2000}
+                          value={draft.notes}
+                          placeholder={t.notesPlaceholder}
+                          onChange={(e) => update({ notes: e.target.value })}
+                        />
+                        <div className="export-row">
+                          <span className="eyebrow">
+                            <Download size={14} />
+                            {t.export}
+                          </span>
+                          {(['md', 'json', 'txt'] as const).map((f) => (
+                            <button
+                              className="small-button"
+                              key={f}
+                              onClick={() => void exportFile(f)}
+                            >
+                              {f === 'md' ? 'Markdown' : f.toUpperCase()}
+                              <ArrowUpRight size={12} />
+                            </button>
                           ))}
-                        </ul>
-                      </details>
-                      <label className="eyebrow" htmlFor="notes">
-                        {t.notes}
-                      </label>
-                      <textarea
-                        id="notes"
-                        disabled={busy}
-                        rows={3}
-                        maxLength={2000}
-                        value={draft.notes}
-                        placeholder={t.notesPlaceholder}
-                        onChange={(e) => update({ notes: e.target.value })}
-                      />
-                      <div className="export-row">
-                        <span className="eyebrow">
-                          <Download size={14} />
-                          {t.export}
-                        </span>
-                        {(['md', 'json', 'txt'] as const).map((f) => (
-                          <button
-                            className="small-button"
-                            key={f}
-                            onClick={() => void exportFile(f)}
-                          >
-                            {f === 'md' ? 'Markdown' : f.toUpperCase()}
-                            <ArrowUpRight size={12} />
-                          </button>
-                        ))}
+                        </div>
+                        <p className="fineprint">{t.exportHint}</p>
                       </div>
-                      <p className="fineprint">{t.exportHint}</p>
-                    </div>
-                  )}
+                    )}
+                  </div>
                   <div className="wizard-actions">
                     <button
                       className="secondary-button"
@@ -1002,12 +1083,12 @@ export default function App() {
                       </button>
                     ) : (
                       <button
-                        className="primary-button"
+                        className={`primary-button ${savedId === draft.id && !dirty ? 'save-success' : ''}`}
                         disabled={busy || !ready || loadFailed}
                         onClick={() => void save()}
                       >
-                        <Save size={16} />
-                        {busy ? t.busy : t.save}
+                        {savedId === draft.id && !dirty ? <Check size={16} /> : <Save size={16} />}
+                        {busy ? t.busy : savedId === draft.id && !dirty ? t.saved : t.save}
                       </button>
                     )}
                   </div>
@@ -1179,7 +1260,7 @@ export default function App() {
       />
       {toast && (
         <div className="toast" role="status">
-          <Info size={17} />
+          {toast === t.saved ? <Check className="success-icon" size={18} /> : <Info size={17} />}
           <span>{toast}</span>
           <button aria-label={t.close} onClick={() => setToast('')}>
             <X size={15} />

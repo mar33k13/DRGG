@@ -2917,7 +2917,7 @@ nav button.active {
 .modal > p {
   font-size: 14px;
 }
-@media (min-width: 1550px) {
+@media (min-width: 1200px) {
   .result-columns {
     grid-template-columns: 1fr 1fr;
   }
@@ -3071,4 +3071,205 @@ nav button.active {
 .field-card select,
 textarea {
   scroll-margin-block: 100px;
+}
+
+/* Motion is decorative: state changes never wait for an animation. */
+@property --fill {
+  syntax: '<percentage>';
+  inherits: false;
+  initial-value: 0%;
+}
+@keyframes panel-in {
+  from {
+    opacity: 0.35;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes dial-turn {
+  from {
+    transform: rotate(-120deg);
+  }
+  to {
+    transform: rotate(0);
+  }
+}
+@keyframes lock-click {
+  0% {
+    transform: scale(0.75) rotate(-12deg);
+  }
+  65% {
+    transform: scale(1.15) rotate(5deg);
+  }
+  100% {
+    transform: scale(1) rotate(0);
+  }
+}
+@keyframes saved-check {
+  from {
+    opacity: 0.3;
+    transform: scale(0.65);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+@keyframes orbit-a {
+  from {
+    transform: translate(-50%, -50%) rotate(-33deg) scaleY(0.38);
+  }
+  to {
+    transform: translate(-50%, -50%) rotate(327deg) scaleY(0.38);
+  }
+}
+@keyframes orbit-b {
+  from {
+    transform: translate(-50%, -50%) rotate(50deg) scaleY(0.3);
+  }
+  to {
+    transform: translate(-50%, -50%) rotate(-310deg) scaleY(0.3);
+  }
+}
+@keyframes float-point {
+  0%,
+  100% {
+    transform: translateY(0) rotate(45deg);
+  }
+  50% {
+    transform: translateY(-8px) rotate(65deg);
+  }
+}
+@keyframes save-flash {
+  from {
+    box-shadow: 0 0 0 0 #b3a0d266;
+  }
+  to {
+    box-shadow: 0 0 0 10px #b3a0d200;
+  }
+}
+.welcome-screen,
+.library-screen {
+  animation: panel-in 300ms ease-out;
+}
+.stage-panel,
+.wizard-screen .page-heading {
+  animation: panel-in 260ms cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+.ring-a {
+  animation: orbit-a 48s linear infinite;
+}
+.ring-b {
+  animation: orbit-b 64s linear infinite;
+}
+.orbital-diamond {
+  animation: float-point 7s ease-in-out infinite;
+}
+.roll-icon {
+  animation: dial-turn 420ms cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+.lock svg {
+  animation: lock-click 220ms ease-out;
+}
+.choice-face {
+  transition:
+    border-color 160ms,
+    background 160ms,
+    transform 160ms;
+}
+.choice-option:hover .choice-face {
+  transform: translateY(-2px);
+}
+.choice-option:active .choice-face {
+  transform: translateY(0) scale(0.985);
+}
+.choice-check {
+  transition: opacity 160ms;
+}
+.primary-button:active:not(:disabled),
+.secondary-button:active:not(:disabled),
+.launch-card:active:not(:disabled) {
+  transform: scale(0.985);
+}
+.meter-segments i {
+  transition: background 220ms;
+}
+.complexity-meter strong {
+  animation: panel-in 180ms ease-out;
+}
+.mini-bars i {
+  transition: height 220ms ease-out;
+}
+.effort-stack {
+  display: flex;
+  overflow: hidden;
+  height: 10px;
+  border-radius: 5px;
+  margin: 22px 0 3px;
+  background: #493d50;
+}
+.effort-stack i {
+  transition: width 200ms ease-out;
+}
+.effort-mechanics {
+  background: #f09a68;
+}
+.effort-physics {
+  background: #d07c6e;
+}
+.effort-graphics {
+  background: #b3a0d2;
+}
+.effort-narrative {
+  background: #9cb7d8;
+}
+.effort-audio {
+  background: #ded0b6;
+}
+.priority-row input {
+  transition: --fill 180ms ease-out;
+}
+.priority-row input:active {
+  transition: none;
+}
+.save-success {
+  animation: save-flash 500ms ease-out;
+  background: #cfb8dd;
+  border-color: #cfb8dd;
+}
+.save-success svg,
+.success-icon {
+  animation: saved-check 220ms ease-out;
+}
+.modal {
+  animation: panel-in 180ms ease-out;
+}
+.motion-toggle {
+  color: var(--muted);
+}
+.motion-toggle[aria-pressed='true'] {
+  color: var(--orange);
+}
+html[data-motion-paused='true'] .orbit-ring,
+html[data-motion-paused='true'] .orbital-diamond {
+  animation-play-state: paused;
+}
+html[data-motion='reduced'] *,
+html[data-motion='reduced'] *::before,
+html[data-motion='reduced'] *::after {
+  animation: none !important;
+  transition: none !important;
+  scroll-behavior: auto !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
 }

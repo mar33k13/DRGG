@@ -171,3 +171,64 @@ test('development model survives rolls, persistence and JSON export with visible
   await page.getByRole('button', { name: 'EN', exact: true }).click();
   await expect(page.locator('.development-summary')).toContainText('Hybrid');
 });
+
+test('engine cards work by keyboard and Roblox remains coherent and locked', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: /01 \/ MANUAL/ }).click();
+  await page.getByRole('button', { name: /Elige tus herramientas/ }).click();
+  await page.getByRole('radio', { name: 'Godot', exact: true }).focus();
+  await page.keyboard.press('ArrowRight');
+  await expect(page.getByRole('radio', { name: 'Unity', exact: true })).toBeChecked();
+  await page.getByRole('radio', { name: 'Roblox Studio', exact: true }).check();
+  await expect(page.getByLabel('Plataforma', { exact: true })).toHaveValue('roblox');
+  await expect(page.getByRole('radio', { name: '3D', exact: true })).toBeChecked();
+  await page.getByRole('button', { name: 'Bloquear: Motor', exact: true }).click();
+  await page.getByRole('button', { name: 'Volver a sortear' }).click();
+  await expect(page.getByRole('radio', { name: 'Roblox Studio', exact: true })).toBeChecked();
+  expect(
+    await page.locator('[data-field=engine]').evaluate((el) => el.getAnimations().length),
+  ).toBe(0);
+  await expect(page.getByRole('button', { name: 'Volver a sortear' })).toBeFocused();
+});
+
+test('motion preference persists, follows the system and leaves every mobile stage usable', async ({
+  page,
+}) => {
+  await page.goto('/');
+  await expect(page.locator('html')).toHaveAttribute('data-motion', 'full');
+  expect(await page.locator('.ring-a').evaluate((el) => getComputedStyle(el).animationName)).toBe(
+    'orbit-a',
+  );
+  await page.getByRole('button', { name: 'Reducir animaciones', exact: true }).click();
+  await page.reload();
+  await expect(page.locator('html')).toHaveAttribute('data-motion', 'reduced');
+  expect(await page.locator('.ring-a').evaluate((el) => getComputedStyle(el).animationName)).toBe(
+    'none',
+  );
+  await page.getByRole('button', { name: 'Reducir animaciones', exact: true }).click();
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await expect(page.locator('html')).toHaveAttribute('data-motion', 'reduced');
+  await expect(
+    page.getByRole('button', { name: 'Reducir animaciones', exact: true }),
+  ).toBeDisabled();
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.getByRole('button', { name: /01 \/ MANUAL/ }).click();
+  await page.getByRole('button', { name: /Principalmente con IA/ }).click();
+  await page.getByRole('checkbox', { name: 'Programación', exact: true }).check();
+  for (let step = 0; step < 5; step++) {
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
+      390,
+    );
+    expect(
+      await page.locator('.stage-panel').evaluate((el) => getComputedStyle(el).animationName),
+    ).toBe('none');
+    if (step < 4)
+      await page
+        .getByRole('button', { name: step === 3 ? 'Ver concepto' : 'Siguiente', exact: true })
+        .click();
+  }
+  await expect(page.locator('.development-summary')).toContainText('Principalmente con IA');
+  await page.getByLabel('Nombre del concepto').fill('Prototipo asistido');
+  await page.getByRole('button', { name: 'Guardar concepto', exact: true }).click();
+  await expect(page.getByRole('button', { name: 'Concepto guardado', exact: true })).toBeVisible();
+});
