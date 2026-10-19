@@ -10,6 +10,10 @@
 - Prueba Rust de reemplazo atómico y límites de lectura: 1 prueba superada.
 - Compilación nativa local Apple Silicon: app y DMG.
 - Ejecución macOS real: interfaz Tauri, creación de concepto, escritura en biblioteca, exportación JSON mediante diálogo nativo e importación del archivo exportado. JSON de salida comprobado: formato `drgg`, versión 1 y prioridades sumando 100.
+- Reapertura de la compilación final: conserva los dos conceptos de ejemplo creados durante las pruebas y permite consultar GPLv3 y avisos de dependencias sin conexión.
+- [Checks de GitHub Actions](https://github.com/mar33k13/DRGG/actions/runs/39244621036): compilación de interfaz y pruebas de lógica/interfaz superadas para el commit `2eabc37142b6585e8430e3ad6feaa7324a76c5a8`.
+
+Paquete macOS Apple Silicon local: `DRGG_0.1.0_aarch64.dmg`. SHA-256: `0568fae7dc2e4845f52e98c6aeceffa7b313973a62249846284b6f90425c751f`. Sin firma de distribución/notarización.
 
 ## Límites
 

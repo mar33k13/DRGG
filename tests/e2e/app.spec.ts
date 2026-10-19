@@ -24,6 +24,11 @@ test('manual workflow, real engines, priorities, persistence, duplicate and dele
   await page.getByRole('button', { name: 'Ver concepto', exact: true }).click();
   await page.getByLabel('Nombre del concepto').fill('Taller orbital');
   await page.getByLabel('Notas', { exact: true }).fill('Una reparación. Un cliente.');
+  if (await page.getByRole('status').isVisible()) {
+    await page.getByRole('status').getByRole('button', { name: 'Cerrar' }).click();
+  }
+  await page.getByRole('heading', { name: 'Tu concepto.' }).focus();
+  await page.evaluate(() => window.scrollTo(0, 0));
   await page.screenshot({ path: testInfo.outputPath('concept.png'), fullPage: true });
   await page.getByRole('button', { name: 'Guardar concepto', exact: true }).click();
   await expect(page.getByRole('status')).toContainText('Concepto guardado');
