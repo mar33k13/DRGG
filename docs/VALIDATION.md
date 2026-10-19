@@ -28,7 +28,15 @@ Paquete macOS Apple Silicon local: `DRGG_0.1.0_aarch64.dmg`. SHA-256: `0568fae7d
 - Revisión visual en navegador y WebKit nativo macOS Apple Silicon; tamaño de los selectores normalizado y flecha empaquetada como recurso local compatible con la política de contenidos nativa. Tarjetas de motores, nueva paleta, modelo de desarrollo, ficha y biblioteca revisados. Las transiciones no bloquean los controles; movimiento reducido comprobado automáticamente. No se ha medido el rendimiento en máquinas externas.
 - Prueba nativa real: guardar «Órbita híbrida — ejemplo» con programación y arte, cerrar, reabrir y recuperar sus selecciones. Archivo en disco comprobado: versión 2, tres conceptos; los dos ejemplos anteriores se conservan como humanos sin áreas.
 - App y DMG Apple Silicon reconstruidos desde `e10653c`. SHA-256 del DMG final: `16bc2ac5479c6776fa19f5d320e1b490d95886eeced88ce0595cc15db345c2cb`. El primer empaquetado del DMG falló en el sandbox (`hdiutil: Device not configured`); el segundo, con acceso al empaquetador de macOS, terminó correctamente.
-- Los instaladores del borrador `preview-0.1.0` y las compilaciones multiplataforma enlazadas arriba corresponden a la versión inicial; no se han sustituido con esta revisión de interfaz.
+- El borrador se actualizó posteriormente con esta revisión; véase la entrega de instaladores siguiente. Las compilaciones iniciales enlazadas arriba se conservan como evidencia histórica.
+
+## Instaladores actualizados y app del Mac (19 de octubre)
+
+- [Desktop packages, ejecución 39262217951](https://github.com/mar33k13/DRGG/actions/runs/39262217951), commit `67fe14f6311c31051ca720e825efe4eb438fc2b7`: los cuatro destinos completaron compilación, pruebas y empaquetado. Sin pasos fallidos. [Checks de interfaz del mismo commit](https://github.com/mar33k13/DRGG/actions/runs/39249143483) también completados correctamente.
+- Sustituidos los siete instaladores de `preview-0.1.0`: dos DMG, EXE, MSI, AppImage, DEB y RPM. Windows, Linux e Intel proceden de esa ejecución; Apple Silicon usa el DMG local probado desde `e10653c`, cuyo código de aplicación es idéntico al de `67fe14f` (solo documentación, capturas y pruebas difieren entre ambos commits).
+- Actualizados el título, las notas, el commit objetivo y las sumas de integridad del [borrador](https://github.com/mar33k13/DRGG/releases/tag/untagged-04d8d80830e077fb597e). Verificados nombre, tamaño, estado de carga y SHA-256 de los ocho assets de GitHub contra los archivos locales. Todos los hashes difieren de la revisión anterior. Se conserva `draft: true` y `prerelease: true`; no se ha publicado. [Manifiesto de los siete instaladores](releases/preview-0.1.0-SHA256SUMS.txt).
+- Instalada la app local actual en `~/Applications/DRGG.app`, con todos sus archivos idénticos al bundle probado. Apertura nativa desde esa ubicación, biblioteca de tres conceptos y reapertura del concepto híbrido con programación/arte comprobadas. Hash de la biblioteca idéntico antes y después; contenido v2 conservado. App abierta en Inicio al terminar.
+- La versión sigue siendo 0.1.0 durante este borrador sin publicar. La [compactación adicional de interfaz](NEXT_UI.md) y el [actualizador interno](UPDATES_PLAN.md) son propuestas para otra entrega, sin cambios funcionales en estos paquetes.
 
 ## Límites
 
