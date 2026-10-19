@@ -129,15 +129,47 @@ test('corrupt library is preserved and saving is blocked', async ({ page }) => {
   await expect(page.getByRole('button', { name: 'Guardar concepto', exact: true })).toBeDisabled();
   expect(await page.evaluate(() => localStorage.getItem('drgg.library.v1'))).toBe('{"version":42}');
 });
-test('responsive layout stays inside the viewport and keyboard controls remain reachable', async ({
-  page,
-}) => {
-  await page.setViewportSize({ width: 390, height: 844 });
-  await page.goto('/');
-  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
-  await page.getByRole('button', { name: /01 \/ MANUAL/ }).click();
-  await expect(page.getByLabel('Objetivo del proyecto', { exact: true })).toBeVisible();
-  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+test('shared layouts keep all stages, library and About inside the viewport', async ({ page }) => {
+  for (const viewport of [
+    { width: 1320, height: 900 },
+    { width: 780, height: 620 },
+    { width: 390, height: 844 },
+  ]) {
+    await page.setViewportSize(viewport);
+    await page.goto('/');
+    await page.getByRole('button', { name: /01 \/ MANUAL/ }).click();
+    for (let step = 0; step < 5; step++) {
+      expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
+        viewport.width,
+      );
+      if (step === 2) {
+        const engine = page.locator('[data-field=engine]');
+        const before = await engine.boundingBox();
+        await page.getByRole('radio', { name: 'Unity', exact: true }).check();
+        await expect(
+          page.getByRole('radio', { name: 'Unity', exact: true }),
+        ).toHaveAccessibleDescription(/Componentes/);
+        expect((await engine.boundingBox())!.height).toBe(before!.height);
+      }
+      const action = page.getByRole('button', {
+        name: step === 4 ? 'Guardar concepto' : step === 3 ? 'Ver concepto' : 'Siguiente',
+        exact: true,
+      });
+      await action.scrollIntoViewIfNeeded();
+      await expect(action).toBeInViewport();
+      if (step < 4) await action.click();
+    }
+    await page.getByRole('button', { name: /Biblioteca/ }).click();
+    await page.getByRole('button', { name: 'Salir sin guardar', exact: true }).click();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
+      viewport.width,
+    );
+    await page.getByRole('button', { name: 'Acerca de DRGG', exact: true }).click();
+    await expect(page.getByRole('dialog')).toBeInViewport();
+    await expect(page.getByRole('dialog').getByRole('heading')).toHaveText('Acerca de DRGG.');
+    await page.keyboard.press('Escape');
+    await expect(page.getByRole('dialog')).toHaveCount(0);
+  }
 });
 
 test('development model survives rolls, persistence and JSON export with visible guidance', async ({

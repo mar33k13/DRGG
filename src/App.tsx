@@ -27,6 +27,9 @@ import {
   ScanLine,
   CirclePause,
   CirclePlay,
+  UserRound,
+  Handshake,
+  Sparkles,
 } from 'lucide-react';
 import { isTauri } from '@tauri-apps/api/core';
 import { getCurrentWindow } from '@tauri-apps/api/window';
@@ -53,13 +56,15 @@ import { loadLibrary, openImport, saveExport, saveLibrary } from './storage';
 import { translations } from './i18n';
 import { choiceDetails } from './choiceDetails';
 import { useMotion } from './useMotion';
+import { ChoiceCard } from './ui/ChoiceCard';
+import { SectionHeading } from './ui/SectionHeading';
 import { aiAreas, developmentModes, developmentText } from './development';
 type Screen = 'home' | 'wizard' | 'library';
 type Prompt = { title: string; body: string; confirm: string; action: () => void };
 const stepFields: Field[][] = [
   ['team', 'scope'],
   ['theme', 'genre', 'subgenre'],
-  ['engine', 'dimension', 'platform', 'mode', 'perspective', 'style'],
+  ['engine', 'platform', 'mode', 'dimension', 'perspective', 'style'],
 ];
 const icons = [ScanLine, Orbit, Cpu, SlidersHorizontal, Layers3];
 function initialLang(): Lang {
@@ -375,7 +380,7 @@ export default function App() {
     return (
       <div
         key={field}
-        className={`field-card ${locked ? 'is-locked' : ''} ${cards ? 'choice-field' : ''}`}
+        className={`field-card ui-panel ${locked ? 'is-locked' : ''} ${cards ? 'choice-field' : ''}`}
         data-field={field}
       >
         <div className="field-label">
@@ -383,23 +388,27 @@ export default function App() {
             <span className="micro">{String(index + 1).padStart(2, '0')}</span>
             {t.fieldNames[field]}
           </label>
-          <button
-            className="icon-button lock"
-            title={`${locked ? t.unlock : t.lock}: ${t.fieldNames[field]}`}
-            aria-label={`${locked ? t.unlock : t.lock}: ${t.fieldNames[field]}`}
-            aria-pressed={locked}
-            onClick={() =>
-              update({
-                locks: locked ? draft.locks.filter((k) => k !== field) : [...draft.locks, field],
-              })
-            }
-          >
-            {locked ? (
-              <LockKeyhole key="locked" size={15} />
-            ) : (
-              <LockKeyholeOpen key="unlocked" size={15} />
-            )}
-          </button>
+          <div className="field-lock">
+            <span className="lock-status">{locked ? t.locked : t.unlocked}</span>
+            <button
+              className="icon-button lock"
+              disabled={busy}
+              title={`${locked ? t.unlock : t.lock}: ${t.fieldNames[field]}`}
+              aria-label={`${locked ? t.unlock : t.lock}: ${t.fieldNames[field]}`}
+              aria-pressed={locked}
+              onClick={() =>
+                update({
+                  locks: locked ? draft.locks.filter((k) => k !== field) : [...draft.locks, field],
+                })
+              }
+            >
+              {locked ? (
+                <LockKeyhole key="locked" size={15} />
+              ) : (
+                <LockKeyholeOpen key="unlocked" size={15} />
+              )}
+            </button>
+          </div>
         </div>
         {cards ? (
           <div
@@ -411,27 +420,17 @@ export default function App() {
               const detail = choiceDetails[o.id as keyof typeof choiceDetails];
               const Icon = detail?.icon || Gamepad2;
               return (
-                <label className="choice-option" key={o.id}>
-                  <input
-                    type="radio"
-                    name={`choice-${field}`}
-                    value={o.id}
-                    aria-label={o[lang]}
-                    checked={draft.config[field] === o.id}
-                    disabled={busy}
-                    onChange={() => changeField(field, o.id)}
-                  />
-                  <span className="choice-face">
-                    <span className="choice-symbol">
-                      <Icon size={21} strokeWidth={1.5} />
-                    </span>
-                    <span className="choice-copy">
-                      <strong>{o[lang]}</strong>
-                      <small>{detail?.[lang]}</small>
-                    </span>
-                    <Check className="choice-check" size={15} />
-                  </span>
-                </label>
+                <ChoiceCard
+                  key={o.id}
+                  name={`choice-${field}`}
+                  value={o.id}
+                  label={o[lang]}
+                  icon={Icon}
+                  selected={draft.config[field] === o.id}
+                  disabled={busy}
+                  helpId={`help-${field}`}
+                  onSelect={() => changeField(field, o.id)}
+                />
               );
             })}
           </div>
@@ -450,15 +449,16 @@ export default function App() {
             ))}
           </select>
         )}
-        <div className="field-bottom">
-          <span>{locked ? t.locked : t.unlocked}</span>
-          <span className="tiny-cross">+</span>
-        </div>
+        {cards && (
+          <p className="choice-help" id={`help-${field}`} aria-live="polite">
+            {choiceDetails[draft.config[field] as keyof typeof choiceDetails]?.[lang]}
+          </p>
+        )}
       </div>
     );
   };
   const scopePanel = (
-    <aside className="scope-panel">
+    <aside className="scope-panel ui-panel">
       <div className="panel-kicker">
         <Radio size={14} />
         {t.scopeReadout}
@@ -647,6 +647,13 @@ export default function App() {
                 EN
               </button>
             </div>
+            <button
+              className="icon-button mobile-about"
+              aria-label={t.about}
+              onClick={() => setAbout(true)}
+            >
+              <Info size={17} />
+            </button>
           </div>
         </header>
         <main>
@@ -751,23 +758,24 @@ export default function App() {
           )}
           {screen === 'wizard' && (
             <div ref={wizardRef} className={`wizard-screen ${step === 4 ? 'is-result' : ''}`}>
-              <div className="page-heading" key={step}>
-                <div>
-                  <span className="eyebrow">
+              <SectionHeading
+                key={step}
+                headingRef={headingRef}
+                title={t.steps[step]}
+                description={t.stepDescriptions[step]}
+                kicker={
+                  <>
                     CONCEPT LAB{' '}
                     <span className="accent">/ {String(step + 1).padStart(2, '0')}</span>
+                  </>
+                }
+                actions={
+                  <span className="page-number">
+                    0{step + 1}
+                    <small>/ 05</small>
                   </span>
-                  <h1 ref={headingRef} tabIndex={-1}>
-                    {t.steps[step]}
-                    <span className="heading-dot">.</span>
-                  </h1>
-                  <p>{t.stepDescriptions[step]}</p>
-                </div>
-                <span className="page-number">
-                  0{step + 1}
-                  <small>/ 05</small>
-                </span>
-              </div>
+                }
+              />
               <div className="wizard-layout">
                 <section className="wizard-content">
                   <div className="generator-bar">
@@ -800,24 +808,59 @@ export default function App() {
                   <div className="stage-panel" key={step}>
                     {step < 3 && (
                       <>
-                        <div className={`field-grid ${step === 1 ? 'concept-fields' : ''}`}>
-                          {stepFields[step].map((field, i) => renderField(field, i))}
-                        </div>
+                        {step === 2 ? (
+                          <div className="tool-groups">
+                            {[
+                              ['engine', 'platform', 'mode'],
+                              ['dimension', 'perspective', 'style'],
+                            ].map((group, index) => (
+                              <section
+                                className="field-group"
+                                key={index}
+                                aria-labelledby={`tool-group-${index}`}
+                              >
+                                <h2 className="group-title" id={`tool-group-${index}`}>
+                                  {index === 0
+                                    ? lang === 'es'
+                                      ? 'Tecnología y juego'
+                                      : 'Technology & gameplay'
+                                    : lang === 'es'
+                                      ? 'Presentación visual'
+                                      : 'Visual direction'}
+                                </h2>
+                                <div className="field-grid">
+                                  {group.map((field, i) =>
+                                    renderField(field as Field, index * 3 + i),
+                                  )}
+                                </div>
+                              </section>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className={`field-grid ${step === 1 ? 'concept-fields' : ''}`}>
+                            {stepFields[step].map((field, i) => renderField(field, i))}
+                          </div>
+                        )}
                         {step === 0 && (
                           <section
-                            className="development-panel"
+                            className="development-panel ui-panel"
                             aria-labelledby="development-title"
                           >
                             <h2 id="development-title">{dt.title}</h2>
-                            <p>{dt.hint}</p>
+                            <p className="panel-description">{dt.hint}</p>
                             <div className="development-options">
                               {developmentModes.map((mode, i) => (
-                                <button
+                                <ChoiceCard
                                   key={mode}
-                                  type="button"
+                                  kind="button"
+                                  name="development"
+                                  value={mode}
+                                  label={dt.modes[mode]}
+                                  icon={[UserRound, Handshake, Sparkles][i]}
+                                  selected={draft.development.mode === mode}
                                   disabled={busy}
-                                  aria-pressed={draft.development.mode === mode}
-                                  onClick={() =>
+                                  helpId="development-help"
+                                  onSelect={() =>
                                     update({
                                       development: {
                                         mode,
@@ -825,14 +868,12 @@ export default function App() {
                                       },
                                     })
                                   }
-                                >
-                                  <span className="micro">0{i + 1}</span>
-                                  <strong>{dt.modes[mode]}</strong>
-                                  <span>{dt.descriptions[mode]}</span>
-                                  {draft.development.mode === mode && <Check size={16} />}
-                                </button>
+                                />
                               ))}
                             </div>
+                            <p className="choice-help" id="development-help" aria-live="polite">
+                              {dt.descriptions[draft.development.mode]}
+                            </p>
                             {draft.development.mode !== 'human' && (
                               <fieldset className="ai-areas">
                                 <legend>{dt.areasTitle}</legend>
@@ -891,7 +932,7 @@ export default function App() {
                       </>
                     )}
                     {step === 3 && (
-                      <div className="effort-panel">
+                      <div className="effort-panel ui-panel">
                         <div className="effort-header">
                           <span className="eyebrow">{t.budget}</span>
                           <strong>
@@ -951,7 +992,7 @@ export default function App() {
                       </div>
                     )}
                     {step === 4 && (
-                      <div className="result-panel">
+                      <div className="result-panel ui-panel">
                         <div
                           className={`concept-banner theme-${draft.config.theme}`}
                           aria-hidden="true"
@@ -1099,26 +1140,25 @@ export default function App() {
           )}
           {screen === 'library' && (
             <div className="library-screen">
-              <div className="page-heading">
-                <div>
-                  <span className="eyebrow">YOUR IDEA ARCHIVE</span>
-                  <h1>
-                    {t.library}
-                    <span className="heading-dot">.</span>
-                  </h1>
-                  <p>
+              <SectionHeading
+                title={t.library}
+                kicker="YOUR IDEA ARCHIVE"
+                description={
+                  <>
                     {library.length.toString().padStart(2, '0')} {t.concepts}
-                  </p>
-                </div>
-                <button
-                  className="secondary-button"
-                  disabled={busy || !ready || loadFailed}
-                  onClick={importClick}
-                >
-                  <Upload size={16} />
-                  {t.import}
-                </button>
-              </div>
+                  </>
+                }
+                actions={
+                  <button
+                    className="secondary-button"
+                    disabled={busy || !ready || loadFailed}
+                    onClick={importClick}
+                  >
+                    <Upload size={16} />
+                    {t.import}
+                  </button>
+                }
+              />
               {!ready ? (
                 <p>{t.loading}</p>
               ) : library.length === 0 ? (
@@ -1136,7 +1176,7 @@ export default function App() {
                   {library.map((c) => {
                     const r = evaluate(c.config, c.priorities, lang, c.development);
                     return (
-                      <article className="saved-card" key={c.id}>
+                      <article className="saved-card ui-panel" key={c.id}>
                         <div
                           className={`concept-banner theme-${c.config.theme}`}
                           aria-hidden="true"
@@ -1270,7 +1310,7 @@ export default function App() {
       {(prompt || about) && (
         <div className="modal-backdrop">
           <div
-            className="modal"
+            className="modal ui-panel"
             ref={modalRef}
             role={prompt ? 'alertdialog' : 'dialog'}
             aria-modal="true"
@@ -1278,8 +1318,14 @@ export default function App() {
             aria-describedby="modal-body"
             onKeyDown={trapModal}
           >
-            <h2 id="modal-title">{prompt?.title || t.about}</h2>
-            <p id="modal-body">{prompt?.body || t.aboutText}</p>
+            <SectionHeading
+              level={2}
+              id="modal-title"
+              descriptionId="modal-body"
+              title={prompt?.title || t.about}
+              description={prompt?.body || t.aboutText}
+              kicker={about ? 'DRGG / STUDIO' : undefined}
+            />
             {about && (
               <>
                 <p className="fineprint">{t.license}</p>

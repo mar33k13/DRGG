@@ -1,6 +1,6 @@
 # Próxima iteración de interfaz
 
-Propuesta del 19 de octubre de 2026, después de probar la primera versión. Estado: plan; estos ajustes adicionales no forman parte de los instaladores de la revisión `67fe14f`.
+Propuesta del 19 de octubre de 2026, después de probar la primera versión. Estado: implementado en la revisión posterior a `518d92b`; pendiente de empaquetar junto al actualizador.
 
 ## Objetivo
 
@@ -28,3 +28,9 @@ Conservar la identidad cálida de consola, las animaciones y las cinco etapas, h
 - Misma apariencia para un mismo tipo de control en cualquier pantalla; estados de foco, bloqueo, error y selección distinguibles.
 - Mantener navegación por teclado, español/inglés, movimientos reducidos, generador coherente, conservación de bloqueos y biblioteca.
 - Validar visualmente en WebKit nativo además de los recorridos automáticos en navegador. No convertir un cambio visual en una modificación de las reglas de complejidad.
+
+## Implementación comprobada
+
+`ChoiceCard` y `SectionHeading` comparten selección, foco, ayudas y cabeceras. `styles/studio.css` reúne las reglas de controles y disposición, retirando sus definiciones repetidas de la hoja anterior. Herramientas separa tecnología/juego y presentación visual; los bloqueos permanecen visibles. Acerca de también es accesible desde la barra superior móvil.
+
+16 pruebas de lógica y los 8 recorridos de interfaz superados. El recorrido responsive ahora atraviesa las cinco etapas, biblioteca y Acerca de a 1320×900, 780×620 y 390×844; comprueba anchura, acciones alcanzables y estabilidad de la tarjeta de motor al cambiar selección. La primera ejecución de la prueba nueva falló porque esperaba un texto de ayuda incorrecto; se corrigió el texto esperado del catálogo, sin modificar el comportamiento. Compilación de producción y app macOS Apple Silicon correctas; composición de Límites revisada en WebKit nativo. La biblioteca existente se conserva.
