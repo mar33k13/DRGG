@@ -64,3 +64,19 @@ Este ajuste es específico de este Mac y no forma parte de los requisitos genera
 - SHA-256 de biblioteca y copia del ensayo: `f29fb2b89fd4fed6e6563eb090ae9ce128ccc266ca3f51e0c4b8d6cbeb702c13`. Se consumió el marcador de recuperación. Biblioteca original del usuario intacta: `f18134820e91a984b507c6ec1b5ea9ad860c6ac496171c6b4291354598d36565`.
 - La feature local `updater-e2e` se usa exclusivamente con identificador separado, clave de ensayo y endpoint loopback. Los paquetes de distribución se compilan sin esa feature, con HTTPS y clave pública de producción.
 - Pendiente de recorrido manual entre dos versiones: Windows EXE/MSI, Linux AppImage y macOS Intel. DEB/RPM tienen descarga manual. No hay certificados de distribución Windows ni notarización Apple; la firma criptográfica del actualizador sí se exige.
+
+### Instalación local de 0.2.0
+
+La app de `~/Applications/DRGG.app` se sustituyó por la compilación de producción de `aba97259`, versión 0.2.0. La app anterior se conserva en `~/Applications/.DRGG-backups/`. Se verificaron la firma del archivo de actualización y su versión, el arranque nativo, la revisión visible, los tres conceptos existentes y la respuesta del canal estable: no ofrece el borrador. La biblioteca conserva el hash original citado arriba.
+
+Esta compilación tiene la firma ad hoc del ejecutable producida por el enlazador, sin certificado de distribución ni sellado completo del bundle; por ello `codesign --verify --deep --strict` no pasa. Esto no se presenta como notarización ni validación de Gatekeeper. La firma del actualizador se verifica por separado y sí pasó.
+
+[Checks del commit de distribución](https://github.com/mar33k13/DRGG/actions/runs/39271172578): 16 pruebas de lógica, 2 de integridad del ensamblado, 14 recorridos de interfaz y compilación frontend correctos.
+
+### Borrador multiplataforma 0.2.0
+
+- [Desktop packages 39271172659](https://github.com/mar33k13/DRGG/actions/runs/39271172659): cuatro compilaciones y ensamblado completados correctamente desde `aba97259a369ba3d0cfdc58259f6afb654475b4b`; las cinco pruebas Rust pasaron en cada destino.
+- Siete instaladores nuevos (Windows EXE/MSI, Mac ARM/Intel DMG, Linux AppImage/DEB/RPM), dos paquetes de actualización de Mac, siete firmas, `latest.json` y SHA-256: 18 assets. Comprobadas las arquitecturas Mach-O de ambos paquetes de Mac, versión e identificador. Verificadas las siete firmas y su versión firmada, los 17 hashes del manifiesto y todas las rutas de actualización.
+- El mismo borrador se actualizó al tag `v0.2.0`, objetivo `aba97259`, conservando `draft: true` y `prerelease: true`. [Abrir borrador](https://github.com/mar33k13/DRGG/releases/tag/untagged-25ee3d171ba29b89bf37). GitHub devuelve tamaño, estado `uploaded` y SHA-256 idénticos a los archivos locales para los 18 assets. Los siete instaladores anteriores se retiraron después de verificar su copia local.
+- [Sumas de los assets 0.2.0](releases/v0.2.0-SHA256SUMS.txt). Los cuatro destinos proceden de Actions; la app local del Mac fue compilada y probada en el propio equipo desde el mismo commit. Las firmas de actualización no sustituyen los certificados de distribución del sistema operativo.
+- El borrador permanece fuera del canal estable. Los ensayos reales de actualización en Windows, Linux AppImage y Mac Intel continúan pendientes; la prueba real completada corresponde a Mac Apple Silicon.
