@@ -3,15 +3,13 @@ test('manual workflow, real engines, priorities, persistence, duplicate and dele
   page,
 }, testInfo) => {
   await page.goto('/');
-  await expect(
-    page.getByRole('heading', { name: 'Ideas pequeñas. Juegos posibles.' }),
-  ).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Inicio.' })).toBeVisible();
   await page.screenshot({
     path: testInfo.outputPath('home.png'),
     fullPage: true,
     animations: 'disabled',
   });
-  await page.getByRole('button', { name: /01 \/ MANUAL/ }).click();
+  await page.getByRole('button', { name: 'Crear concepto', exact: true }).click();
   await page.getByLabel('Tu equipo', { exact: true }).selectOption('2-3');
   await page.getByRole('button', { name: 'Siguiente', exact: true }).click();
   await page.getByLabel('Temática', { exact: true }).selectOption('workshop');
@@ -65,7 +63,7 @@ test('manual workflow, real engines, priorities, persistence, duplicate and dele
 });
 test('random locks, coherent conflict, language and unsaved changes', async ({ page }) => {
   await page.goto('/');
-  await page.getByRole('button', { name: /02 \/ RANDOM/ }).click();
+  await page.getByRole('button', { name: 'Generar aleatoriamente', exact: true }).click();
   const team = await page.getByLabel('Tu equipo', { exact: true }).inputValue();
   for (let i = 0; i < 3; i++) await page.getByRole('button', { name: 'Volver a sortear' }).click();
   await expect(page.getByLabel('Tu equipo', { exact: true })).toHaveValue(team);
@@ -88,7 +86,7 @@ test('JSON import validation and safe text rendering', async ({ page }) => {
     buffer: Buffer.from('{"version":99}'),
   });
   await expect(page.getByRole('status')).toContainText('no es un concepto DRGG válido');
-  await expect(page.getByText('Tu biblioteca está por escribir.')).toBeVisible();
+  await expect(page.getByText('Todavía no hay conceptos guardados')).toBeVisible();
   const c = {
     id: 'import-fixture',
     title: '<img src=x onerror=alert(1)>',
@@ -124,7 +122,11 @@ test('corrupt library is preserved and saving is blocked', async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem('drgg.library.v1', '{"version":42}'));
   await page.goto('/');
   await expect(page.getByRole('alert')).toContainText('guardado está desactivado');
-  await page.getByRole('button', { name: /01 \/ MANUAL/ }).click();
+  await expect(page.getByText('Todavía no hay conceptos guardados')).toHaveCount(0);
+  await page.getByRole('button', { name: /Biblioteca/ }).click();
+  await expect(page.getByText('Todavía no hay conceptos guardados')).toHaveCount(0);
+  await page.getByRole('button', { name: 'Inicio', exact: true }).click();
+  await page.getByRole('button', { name: 'Crear concepto', exact: true }).click();
   await page.getByRole('button', { name: 'Tu concepto', exact: false }).click();
   await expect(page.getByRole('button', { name: 'Guardar concepto', exact: true })).toBeDisabled();
   expect(await page.evaluate(() => localStorage.getItem('drgg.library.v1'))).toBe('{"version":42}');
@@ -137,7 +139,7 @@ test('shared layouts keep all stages, library and About inside the viewport', as
   ]) {
     await page.setViewportSize(viewport);
     await page.goto('/');
-    await page.getByRole('button', { name: /01 \/ MANUAL/ }).click();
+    await page.getByRole('button', { name: 'Crear concepto', exact: true }).click();
     for (let step = 0; step < 5; step++) {
       expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
         viewport.width,
@@ -178,7 +180,7 @@ test('development model survives rolls, persistence and JSON export with visible
   page,
 }) => {
   await page.goto('/');
-  await page.getByRole('button', { name: /01 \/ MANUAL/ }).click();
+  await page.getByRole('button', { name: 'Crear concepto', exact: true }).click();
   await page.getByRole('button', { name: /Híbrido/ }).click();
   await page.getByRole('checkbox', { name: 'Programación', exact: true }).check();
   await page.getByRole('checkbox', { name: 'Arte', exact: true }).check();
@@ -216,7 +218,7 @@ test('development model survives rolls, persistence and JSON export with visible
 
 test('engine cards work by keyboard and Roblox remains coherent and locked', async ({ page }) => {
   await page.goto('/');
-  await page.getByRole('button', { name: /01 \/ MANUAL/ }).click();
+  await page.getByRole('button', { name: 'Crear concepto', exact: true }).click();
   await page.getByRole('button', { name: /Elige tus herramientas/ }).click();
   await page.getByRole('radio', { name: 'Godot', exact: true }).focus();
   await page.keyboard.press('ArrowRight');
@@ -238,15 +240,19 @@ test('motion preference persists, follows the system and leaves every mobile sta
 }) => {
   await page.goto('/');
   await expect(page.locator('html')).toHaveAttribute('data-motion', 'full');
+  await page.getByRole('button', { name: 'Acerca de DRGG', exact: true }).click();
   expect(await page.locator('.ring-a').evaluate((el) => getComputedStyle(el).animationName)).toBe(
     'orbit-a',
   );
+  await page.keyboard.press('Escape');
   await page.getByRole('button', { name: 'Reducir animaciones', exact: true }).click();
   await page.reload();
   await expect(page.locator('html')).toHaveAttribute('data-motion', 'reduced');
+  await page.getByRole('button', { name: 'Acerca de DRGG', exact: true }).click();
   expect(await page.locator('.ring-a').evaluate((el) => getComputedStyle(el).animationName)).toBe(
     'none',
   );
+  await page.keyboard.press('Escape');
   await page.getByRole('button', { name: 'Reducir animaciones', exact: true }).click();
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await expect(page.locator('html')).toHaveAttribute('data-motion', 'reduced');
@@ -254,7 +260,7 @@ test('motion preference persists, follows the system and leaves every mobile sta
     page.getByRole('button', { name: 'Reducir animaciones', exact: true }),
   ).toBeDisabled();
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.getByRole('button', { name: /01 \/ MANUAL/ }).click();
+  await page.getByRole('button', { name: 'Crear concepto', exact: true }).click();
   await page.getByRole('button', { name: /Principalmente con IA/ }).click();
   await page.getByRole('checkbox', { name: 'Programación', exact: true }).check();
   for (let step = 0; step < 5; step++) {
@@ -277,7 +283,7 @@ test('motion preference persists, follows the system and leaves every mobile sta
 
 test('active concept and save state stay truthful across edits and reopening', async ({ page }) => {
   await page.goto('/');
-  await page.getByRole('button', { name: /01 \/ MANUAL/ }).click();
+  await page.getByRole('button', { name: 'Crear concepto', exact: true }).click();
   await expect(page.locator('.save-state')).toHaveText('Sin guardar');
   await expect(page.locator('.step-progress')).toHaveText('Paso 1 de 5');
   await page.getByRole('button', { name: /Tu concepto/ }).click();
@@ -296,4 +302,97 @@ test('active concept and save state stay truthful across edits and reopening', a
   await page.getByRole('button', { name: 'Open', exact: true }).click();
   await expect(page.locator('.save-state')).toHaveText('Saved');
   await expect(page.getByLabel('Notes', { exact: true })).toHaveValue('');
+});
+
+test('Home resumes the three latest saves by keyboard and refreshes after library changes', async ({
+  page,
+}, testInfo) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Crear concepto', exact: true }).click();
+  await page.getByRole('button', { name: /Tu concepto/ }).click();
+  await page.getByRole('button', { name: 'Guardar concepto', exact: true }).click();
+  await expect(page.locator('.save-state')).toHaveText('Guardado');
+  const seed = await page.evaluate(
+    () => JSON.parse(localStorage.getItem('drgg.library.v1')!).concepts[0],
+  );
+  const makeConcept = () => ({ ...seed, id: crypto.randomUUID() });
+  const concepts = [
+    { ...makeConcept(), title: 'Más antiguo', updatedAt: '2026-10-01T10:00:00Z' },
+    { ...makeConcept(), title: 'Segundo', updatedAt: '2026-10-05T11:00:00+02:00' },
+    { ...makeConcept(), title: 'Más reciente', updatedAt: '2026-10-05T10:00:00Z' },
+    { ...makeConcept(), title: 'Tercero', updatedAt: '2026-10-04T10:00:00Z' },
+  ];
+  await page.goto('/');
+  await page.evaluate(
+    (concepts) => localStorage.setItem('drgg.library.v1', JSON.stringify({ version: 2, concepts })),
+    concepts,
+  );
+  await page.reload();
+  await expect(page.locator('.recent-copy strong')).toHaveText([
+    'Más reciente',
+    'Segundo',
+    'Tercero',
+  ]);
+  await page.getByRole('button', { name: 'Abrir: Segundo', exact: true }).focus();
+  await page.keyboard.press('Enter');
+  await expect(page.getByLabel('Nombre del concepto')).toHaveValue('Segundo');
+  await expect(page.locator('.save-state')).toHaveText('Guardado');
+  await page.getByLabel('Nombre del concepto').fill('Actualizado');
+  await page.getByRole('button', { name: 'Guardar concepto', exact: true }).click();
+  await expect(page.locator('.save-state')).toHaveText('Guardado');
+  await page.getByRole('button', { name: 'Inicio', exact: true }).click();
+  await expect(page.locator('.recent-copy strong').first()).toHaveText('Actualizado');
+  await page.getByRole('button', { name: 'Ver biblioteca', exact: true }).click();
+  await page.getByRole('button', { name: 'Eliminar: Actualizado', exact: true }).click();
+  await page
+    .getByRole('alertdialog')
+    .getByRole('button', { name: 'Eliminar', exact: true })
+    .click();
+  await page.getByRole('button', { name: 'Inicio', exact: true }).click();
+  await expect(page.locator('.recent-copy strong')).toHaveText([
+    'Más reciente',
+    'Tercero',
+    'Más antiguo',
+  ]);
+  if (await page.locator('.toast').isVisible())
+    await page.locator('.toast').getByRole('button').click();
+  for (const viewport of [
+    { width: 1320, height: 900 },
+    { width: 780, height: 620 },
+    { width: 390, height: 844 },
+  ]) {
+    await page.setViewportSize(viewport);
+    await expect(
+      page.getByRole('button', { name: 'Crear concepto', exact: true }),
+    ).toBeInViewport();
+    await expect(
+      page.getByRole('button', { name: 'Generar aleatoriamente', exact: true }),
+    ).toBeInViewport();
+    if (viewport.width >= 780)
+      await expect(page.locator('.recent-concept').last()).toBeInViewport({ ratio: 1 });
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
+      viewport.width,
+    );
+    await page.screenshot({
+      path: testInfo.outputPath(`home-${viewport.width}.png`),
+      fullPage: true,
+      animations: 'disabled',
+    });
+    await page.getByRole('button', { name: 'Acerca de DRGG', exact: true }).click();
+    await page.screenshot({
+      path: testInfo.outputPath(`about-${viewport.width}.png`),
+      animations: 'disabled',
+    });
+    await page.keyboard.press('Escape');
+    await page.getByRole('button', { name: 'Ver biblioteca', exact: true }).click();
+    await page.screenshot({
+      path: testInfo.outputPath(`library-${viewport.width}.png`),
+      fullPage: true,
+      animations: 'disabled',
+    });
+    await page.getByRole('button', { name: 'Inicio', exact: true }).click();
+  }
+  await page.getByRole('button', { name: 'EN', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'Recently saved', exact: true })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Open: Más reciente', exact: true })).toBeVisible();
 });

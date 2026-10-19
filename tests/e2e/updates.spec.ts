@@ -74,7 +74,7 @@ test('unsaved changes: cancel, failed save blocks install, successful save prece
   await nativePage(page);
   await readyUpdate(page);
   await page.getByRole('button', { name: 'Cerrar', exact: true }).click();
-  await page.getByRole('button', { name: /01 \/ MANUAL/ }).click();
+  await page.getByRole('button', { name: 'Crear concepto', exact: true }).click();
   await page.getByRole('button', { name: /Tu concepto/ }).click();
   await page.getByLabel('Nombre del concepto').fill('Conservar antes de actualizar');
   await page.getByRole('button', { name: 'Acerca de DRGG', exact: true }).click();
@@ -128,7 +128,7 @@ test('discard does not persist a new unsaved concept; unavailable channel never 
   await expect(page.getByRole('progressbar')).toBeVisible();
   await page.evaluate(() => window.updateMock.finish?.());
   await page.getByRole('button', { name: 'Cerrar', exact: true }).click();
-  await page.getByRole('button', { name: /01 \/ MANUAL/ }).click();
+  await page.getByRole('button', { name: 'Crear concepto', exact: true }).click();
   await page.getByLabel('Tu equipo', { exact: true }).selectOption('2-3');
   await page.getByRole('button', { name: 'Acerca de DRGG', exact: true }).click();
   await page.getByRole('button', { name: 'Instalar y reiniciar', exact: true }).click();
@@ -163,7 +163,7 @@ test('completed update restores saved concept and update panel fits small viewpo
   // Create a valid concept through the existing workflow, then simulate the native restart marker.
   await nativePage(page);
   await page.getByRole('button', { name: 'Cerrar', exact: true }).click();
-  await page.getByRole('button', { name: /01 \/ MANUAL/ }).click();
+  await page.getByRole('button', { name: 'Crear concepto', exact: true }).click();
   await page.getByRole('button', { name: /Tu concepto/ }).click();
   await page.getByLabel('Nombre del concepto').fill('Sesión recuperada');
   await page.getByRole('button', { name: 'Guardar concepto', exact: true }).click();

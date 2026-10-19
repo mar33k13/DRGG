@@ -58,6 +58,7 @@ import { choiceDetails } from './choiceDetails';
 import { useMotion } from './useMotion';
 import { ChoiceCard } from './ui/ChoiceCard';
 import { SectionHeading } from './ui/SectionHeading';
+import { AboutIdentity } from './ui/AboutIdentity';
 import { UpdatePanel } from './ui/UpdatePanel';
 import { useUpdates, type UpdateResume } from './updates';
 import { updateText } from './updateText';
@@ -114,6 +115,9 @@ export default function App() {
   const dt = developmentText[lang],
     t = translations[lang],
     report = evaluate(draft.config, draft.priorities, lang, draft.development);
+  const recentConcepts = [...library]
+    .sort((a, b) => Date.parse(b.updatedAt) - Date.parse(a.updatedAt))
+    .slice(0, 3);
   const stored = library.some((concept) => concept.id === draft.id);
   const saveState = !ready
     ? t.loading
@@ -738,70 +742,14 @@ export default function App() {
           )}
           {screen === 'home' && (
             <div className="welcome-screen">
-              <div className="welcome-top">
-                <span className="eyebrow">
-                  <span className="status-dot" />
-                  {t.welcome}
-                </span>
-                <span className="serial">RGG / 001 — ∞</span>
-              </div>
-              <section className="hero">
-                <div className="hero-copy">
-                  <div className="tagline">{t.tagline}</div>
-                  <h1>
-                    {t.heroA}
-                    <br />
-                    <span>{t.heroB}</span>
-                  </h1>
-                  <p>{t.intro}</p>
-                  <div className="hero-meta">
-                    <span>01 IDEA</span>
-                    <span>05—10 MIN</span>
-                    <span>∞ POSSIBILITIES</span>
-                  </div>
-                </div>
-                <div className="orbital-art" aria-hidden="true">
-                  <div className="art-top">
-                    <span>IDEA EXPLORER</span>
-                    <ScanLine size={17} />
-                  </div>
-                  <div className="orbital-grid">
-                    <div className="orbit-ring ring-a" />
-                    <div className="orbit-ring ring-b" />
-                    <div className="orbit-ring ring-c" />
-                    <div className="planet-lines">
-                      {Array.from({ length: 9 }, (_, i) => (
-                        <i
-                          key={i}
-                          style={{ width: `${Math.sqrt(1 - ((i - 4) / 5) ** 2) * 100}%` }}
-                        />
-                      ))}
-                    </div>
-                    <div className="orbital-diamond" />
-                    <span className="art-point point-a" />
-                    <span className="art-point point-b" />
-                    <span className="art-coordinate coordinate-a">
-                      X: 024.8
-                      <br />
-                      Y: 108.2
-                    </span>
-                    <span className="art-coordinate coordinate-b">
-                      SMALL SCOPE
-                      <br />
-                      BIG POTENTIAL
-                    </span>
-                  </div>
-                  <div className="art-bottom">
-                    <span className="status-dot" />
-                    {t.systemReady}
-                    <span>+ + +</span>
-                  </div>
-                </div>
-              </section>
+              <SectionHeading title={t.home} description={t.homeHint} />
               <div className="launch-grid">
-                <button className="launch-card primary-launch" onClick={() => start(false)}>
+                <button
+                  className="launch-card primary-launch"
+                  aria-label={t.manual}
+                  onClick={() => start(false)}
+                >
                   <div className="launch-top">
-                    <span className="launch-index">01 / MANUAL</span>
                     <Layers3 size={23} />
                   </div>
                   <h2>{t.manual}</h2>
@@ -810,9 +758,12 @@ export default function App() {
                     <ArrowUpRight size={24} />
                   </span>
                 </button>
-                <button className="launch-card random-launch" onClick={() => start(true)}>
+                <button
+                  className="launch-card random-launch"
+                  aria-label={t.random}
+                  onClick={() => start(true)}
+                >
                   <div className="launch-top">
-                    <span className="launch-index">02 / RANDOM</span>
                     <Shuffle size={23} />
                   </div>
                   <h2>{t.random}</h2>
@@ -822,11 +773,59 @@ export default function App() {
                   </span>
                 </button>
               </div>
-              <div className="welcome-note">
-                <Gamepad2 size={17} />
-                <span>{t.localOnly}</span>
-                <span className="note-end">{t.by}</span>
-              </div>
+              <section className="recent-section" aria-labelledby="recent-title">
+                <div className="recent-heading">
+                  <h2 id="recent-title">{t.recent}</h2>
+                  <button className="text-button" onClick={() => setScreen('library')}>
+                    {t.viewLibrary}
+                    <ArrowRight size={15} />
+                  </button>
+                </div>
+                {!ready ? (
+                  <p className="fineprint">{t.loading}</p>
+                ) : loadFailed ? null : recentConcepts.length ? (
+                  <div className="recent-list">
+                    {recentConcepts.map((c) => (
+                      <button
+                        className="recent-concept ui-panel"
+                        key={c.id}
+                        aria-label={`${t.open}: ${c.title || t.untitled}`}
+                        onClick={() => openConcept(c)}
+                      >
+                        <span className="recent-icon" aria-hidden="true">
+                          <Layers3 size={19} />
+                        </span>
+                        <span className="recent-copy">
+                          <strong>{c.title || t.untitled}</strong>
+                          <span>
+                            {label('engine', c.config.engine, lang)} ·{' '}
+                            {label('scope', c.config.scope, lang)}
+                          </span>
+                        </span>
+                        <time dateTime={c.updatedAt}>
+                          {new Date(c.updatedAt).toLocaleDateString(
+                            lang === 'es' ? 'es-ES' : 'en-GB',
+                            { day: '2-digit', month: 'short' },
+                          )}
+                        </time>
+                        <ArrowUpRight size={17} aria-hidden="true" />
+                      </button>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="home-empty ui-panel">
+                    <Library size={22} aria-hidden="true" />
+                    <div>
+                      <h3>{t.noConcepts}</h3>
+                      <p>{t.recentHint}</p>
+                    </div>
+                    <button className="secondary-button" disabled={busy} onClick={importClick}>
+                      <Upload size={15} />
+                      {t.import}
+                    </button>
+                  </div>
+                )}
+              </section>
             </div>
           )}
           {screen === 'wizard' && (
@@ -1209,7 +1208,11 @@ export default function App() {
                 title={t.library}
                 description={
                   <>
-                    {library.length.toString().padStart(2, '0')} {t.concepts}
+                    {loadFailed
+                      ? t.storageUnavailable
+                      : !ready
+                        ? t.loading
+                        : `${library.length} ${t.concepts}`}
                   </>
                 }
                 actions={
@@ -1225,7 +1228,7 @@ export default function App() {
               />
               {!ready ? (
                 <p>{t.loading}</p>
-              ) : library.length === 0 ? (
+              ) : loadFailed ? null : library.length === 0 ? (
                 <div className="empty-state">
                   <Library size={45} />
                   <h2>{t.noConcepts}</h2>
@@ -1241,14 +1244,6 @@ export default function App() {
                     const r = evaluate(c.config, c.priorities, lang, c.development);
                     return (
                       <article className="saved-card ui-panel" key={c.id}>
-                        <div
-                          className={`concept-banner theme-${c.config.theme}`}
-                          aria-hidden="true"
-                        >
-                          <div className="banner-orbit" />
-                          <span>{label('theme', c.config.theme, lang)}</span>
-                          <span>{label('genre', c.config.genre, lang)}</span>
-                        </div>
                         <div className="saved-top">
                           <span className="eyebrow">{label('scope', c.config.scope, lang)}</span>
                           <span className={`complexity-pill level-${r.complexity}`}>
@@ -1263,6 +1258,7 @@ export default function App() {
                         </p>
                         <div className="saved-tags">
                           <span>{label('engine', c.config.engine, lang)}</span>
+                          <span>{label('theme', c.config.theme, lang)}</span>
                           <span>{label('dimension', c.config.dimension, lang)}</span>
                           <span>{dt.modes[c.development.mode]}</span>
                         </div>
@@ -1273,7 +1269,10 @@ export default function App() {
                           )}
                         </time>
                         <div className="saved-actions">
-                          <button className="text-button" onClick={() => openConcept(c)}>
+                          <button
+                            className="secondary-button open-concept"
+                            onClick={() => openConcept(c)}
+                          >
                             {t.open}
                             <ArrowUpRight size={15} />
                           </button>
@@ -1346,7 +1345,11 @@ export default function App() {
             </span>
           )}
           <span className="footer-count">
-            {library.length.toString().padStart(2, '0')} / {t.concepts}
+            {loadFailed
+              ? t.storageUnavailable
+              : !ready
+                ? t.loading
+                : `${library.length} ${t.concepts}`}
           </span>
         </footer>
       </div>
@@ -1399,6 +1402,7 @@ export default function App() {
             />
             {about && !prompt && (
               <>
+                <AboutIdentity lang={lang} />
                 <UpdatePanel
                   updater={updater}
                   lang={lang}

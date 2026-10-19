@@ -1,6 +1,6 @@
 [package]
 name = "drgg"
-version = "0.2.0"
+version = "0.2.1"
 description = "Small ideas. Possible games. An offline game concept generator."
 authors = ["kaizem (mar33k13)"]
 license = "GPL-3.0-only"

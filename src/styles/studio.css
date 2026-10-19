@@ -579,3 +579,270 @@
     flex-wrap: wrap;
   }
 }
+
+/* Start or resume work; the larger brand illustration lives in About. */
+.welcome-screen {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 26px 30px 30px;
+}
+.welcome-screen .launch-grid {
+  gap: 12px;
+}
+.welcome-screen .launch-card {
+  min-height: 145px;
+  padding: 18px 20px;
+}
+.welcome-screen .launch-top {
+  margin-bottom: 12px;
+}
+.welcome-screen .launch-card h2 {
+  font-size: 20px;
+  margin-bottom: 7px;
+}
+.welcome-screen .launch-card > p {
+  font-size: 13px;
+  max-width: calc(100% - 28px);
+}
+.welcome-screen .launch-arrow {
+  right: 18px;
+  bottom: 18px;
+}
+.recent-section {
+  margin-top: 26px;
+}
+.recent-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+.recent-heading h2 {
+  font-size: 16px;
+  font-weight: 600;
+}
+.recent-heading .text-button {
+  min-height: 42px;
+  font-size: 12px;
+}
+.recent-list {
+  display: grid;
+  gap: 9px;
+}
+.recent-concept {
+  display: flex;
+  align-items: center;
+  text-align: left;
+  padding: 14px 16px;
+  gap: 14px;
+  width: 100%;
+}
+.recent-concept:hover {
+  border-color: var(--violet);
+  background: #322a38;
+}
+.recent-icon {
+  display: grid;
+  place-items: center;
+  background: #44334d;
+  color: #c4abd8;
+  border-radius: 8px;
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+}
+.recent-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+  flex: 1;
+}
+.recent-copy strong {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--cream);
+  overflow-wrap: anywhere;
+}
+.recent-copy > span,
+.recent-concept time {
+  font-size: 12px;
+  color: var(--muted);
+}
+.recent-concept > svg,
+.recent-concept time {
+  flex-shrink: 0;
+}
+.home-empty {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 20px;
+}
+.home-empty > svg {
+  color: var(--violet);
+  flex-shrink: 0;
+}
+.home-empty > div {
+  flex: 1;
+}
+.home-empty h3 {
+  font-size: 14px;
+  font-weight: 500;
+  margin-bottom: 6px;
+}
+.home-empty p {
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.6;
+}
+.library-screen .empty-state {
+  padding: 36px 20px;
+}
+.library-screen .empty-state > svg {
+  margin-bottom: 16px;
+}
+.saved-card {
+  border-top: 2px solid #79546d;
+}
+.saved-card .saved-top {
+  margin-bottom: 12px;
+}
+.saved-card h2 {
+  font-size: 20px;
+}
+.saved-card > p {
+  margin: 10px 0 14px;
+}
+.saved-card time {
+  margin: 14px 0 10px;
+}
+.saved-actions {
+  align-items: center;
+}
+.saved-actions .open-concept {
+  margin-right: auto;
+}
+.about-identity {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin: 0 0 18px;
+  padding: 10px;
+  border: 1px solid var(--studio-border);
+  border-radius: 10px;
+  background: linear-gradient(120deg, #35252e, #25212e);
+}
+.about-orbit {
+  width: 112px;
+  height: 84px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.about-orbit .orbital-grid {
+  display: block;
+  width: 320px;
+  height: 240px;
+  transform: scale(0.35);
+  transform-origin: top left;
+}
+.about-identity p {
+  font-size: 15px;
+  line-height: 1.4;
+  color: var(--cream);
+  margin: 0 0 6px;
+}
+.about-identity span {
+  font-size: 10px;
+  line-height: 1.5;
+  color: var(--muted);
+}
+@media (max-width: 1150px) {
+  .welcome-screen {
+    padding: 24px;
+  }
+}
+@media (max-width: 620px) {
+  .welcome-screen {
+    padding: 20px;
+  }
+  .welcome-screen .launch-card {
+    min-height: 125px;
+    padding: 16px;
+  }
+  .welcome-screen .launch-card h2 {
+    font-size: 18px;
+  }
+  .welcome-screen .launch-top {
+    margin-bottom: 8px;
+  }
+  .recent-heading {
+    align-items: flex-start;
+  }
+  .recent-heading h2 {
+    padding-top: 10px;
+    font-size: 14px;
+  }
+  .recent-concept {
+    padding: 12px;
+    gap: 10px;
+  }
+  .recent-concept time {
+    display: none;
+  }
+  .home-empty {
+    flex-wrap: wrap;
+    gap: 12px;
+    padding: 16px;
+  }
+  .home-empty > div {
+    flex-basis: calc(100% - 40px);
+  }
+  .about-identity {
+    gap: 10px;
+    padding: 8px;
+  }
+  .about-orbit {
+    width: 80px;
+    height: 70px;
+  }
+  .about-orbit .orbital-grid {
+    transform: scale(0.28);
+    margin-left: -5px;
+  }
+  .about-identity p {
+    font-size: 14px;
+  }
+}
+@media (min-width: 621px) and (max-width: 980px) {
+  .welcome-screen {
+    padding: 18px 24px;
+  }
+  .welcome-screen .page-heading {
+    margin-bottom: 16px;
+  }
+  .welcome-screen .launch-top {
+    display: none;
+  }
+  .welcome-screen .launch-card {
+    min-height: 120px;
+    padding: 16px;
+  }
+  .welcome-screen .launch-card h2 {
+    font-size: 18px;
+    line-height: 1.3;
+  }
+  .welcome-screen .launch-card > p {
+    font-size: 12px;
+  }
+  .recent-section {
+    margin-top: 18px;
+  }
+  .recent-heading {
+    margin-bottom: 6px;
+  }
+  .recent-concept {
+    padding: 10px 14px;
+  }
+}

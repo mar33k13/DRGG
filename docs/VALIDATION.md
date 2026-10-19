@@ -80,3 +80,12 @@ Esta compilación tiene la firma ad hoc del ejecutable producida por el enlazado
 - El mismo borrador se actualizó al tag `v0.2.0`, objetivo `aba97259`, conservando `draft: true` y `prerelease: true`. [Abrir borrador](https://github.com/mar33k13/DRGG/releases/tag/untagged-25ee3d171ba29b89bf37). GitHub devuelve tamaño, estado `uploaded` y SHA-256 idénticos a los archivos locales para los 18 assets. Los siete instaladores anteriores se retiraron después de verificar su copia local.
 - [Sumas de los assets 0.2.0](releases/v0.2.0-SHA256SUMS.txt). Los cuatro destinos proceden de Actions; la app local del Mac fue compilada y probada en el propio equipo desde el mismo commit. Las firmas de actualización no sustituyen los certificados de distribución del sistema operativo.
 - El borrador permanece fuera del canal estable. Los ensayos reales de actualización en Windows, Linux AppImage y Mac Intel continúan pendientes; la prueba real completada corresponde a Mac Apple Silicon.
+
+## Revisión unReason 0.2.1
+
+- Primera parte (`bab19c7`): contexto activo, estados de guardado y jerarquía de acciones. 15 recorridos Playwright correctos.
+- Segunda parte: Inicio con acceso a los tres guardados recientes, biblioteca compacta y lema/órbita en Acerca de. 16 recorridos Playwright completos correctos, incluidos orden cronológico con distintas zonas horarias, reapertura por teclado, edición/borrado y actualización de recientes, biblioteca dañada y errores de guardado.
+- 16 pruebas de lógica, 2 de ensamblado/firmas y 5 nativas Rust correctas. TypeScript y compilación Vite correctos; persiste el aviso conocido por el tamaño de los textos legales empaquetados.
+- Revisión visual del navegador a 1320×900, 780×620 y 390×844. En el tamaño mínimo nativo los tres recientes caben completos. Se mantienen movimiento reducido local/sistema, transiciones, selecciones, sorteo y órbita animada en Acerca de. Capturas actualizadas de Inicio, Inicio compacto y biblioteca.
+- Un primer intento de la nueva prueba de recientes falló al importar JSON del catálogo desde Node sin atributo de tipo. La preparación usa ahora un concepto creado y guardado mediante la interfaz. No se modificaron los criterios de aceptación.
+- El empaquetado final, la instalación del Mac y la verificación de assets se realizan desde el commit de esta versión; su resultado y ejecuciones se adjuntan a las notas del borrador. Las comprobaciones históricas de 0.2.0 no sustituyen esta verificación.
