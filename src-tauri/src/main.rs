@@ -43,14 +43,18 @@ fn load_library(app: AppHandle) -> Result<Option<String>, String> {
     }
 }
 
-#[tauri::command]
-fn save_library(app: AppHandle, contents: String) -> Result<(), String> {
+fn write_library(path: &Path, contents: &str) -> Result<(), String> {
     if contents.len() as u64 > MAX_LIBRARY { return Err("Library exceeds the size limit".into()); }
-    let data: serde_json::Value = serde_json::from_str(&contents).map_err(|e| e.to_string())?;
-    if data["version"] != 1 || !data["concepts"].is_array() {
+    let data: serde_json::Value = serde_json::from_str(contents).map_err(|e| e.to_string())?;
+    if !matches!(data["version"].as_u64(), Some(1 | 2)) || !data["concepts"].is_array() {
         return Err("Unsupported library format".into());
     }
-    atomic_write(&library_path(&app)?, &contents)
+    atomic_write(path, contents)
+}
+
+#[tauri::command]
+fn save_library(app: AppHandle, contents: String) -> Result<(), String> {
+    write_library(&library_path(&app)?, &contents)
 }
 
 // Paths never come from the renderer. Native dialogs grant access to a single file.
@@ -95,6 +99,17 @@ fn main() {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn persists_development_models_and_rejects_unknown_versions_without_overwriting() {
+        let directory = tempfile::tempdir().unwrap();
+        let path = directory.path().join("library.json");
+        write_library(&path, r#"{"version":1,"concepts":[]}"#).unwrap();
+        let current = r#"{"version":2,"concepts":[{"development":{"mode":"hybrid","areas":["code"]}}]}"#;
+        write_library(&path, current).unwrap();
+        assert_eq!(read_limited(&path, MAX_LIBRARY).unwrap(), current);
+        assert!(write_library(&path, r#"{"version":3,"concepts":[]}"#).is_err());
+        assert_eq!(read_limited(&path, MAX_LIBRARY).unwrap(), current);
+    }
     #[test]
     fn atomic_replace_and_read_limits() {
         let directory = tempfile::tempdir().unwrap();
