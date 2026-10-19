@@ -274,3 +274,26 @@ test('motion preference persists, follows the system and leaves every mobile sta
   await page.getByRole('button', { name: 'Guardar concepto', exact: true }).click();
   await expect(page.getByRole('button', { name: 'Concepto guardado', exact: true })).toBeVisible();
 });
+
+test('active concept and save state stay truthful across edits and reopening', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: /01 \/ MANUAL/ }).click();
+  await expect(page.locator('.save-state')).toHaveText('Sin guardar');
+  await expect(page.locator('.step-progress')).toHaveText('Paso 1 de 5');
+  await page.getByRole('button', { name: /Tu concepto/ }).click();
+  await page.getByLabel('Nombre del concepto').fill('Mi concepto activo');
+  await expect(page.locator('.active-context')).toHaveText('Mi concepto activo');
+  await expect(page.locator('.save-state')).toHaveText('Sin guardar');
+  await page.getByRole('button', { name: 'Guardar concepto', exact: true }).click();
+  await expect(page.locator('.save-state')).toHaveText('Guardado');
+  await page.getByLabel('Notas', { exact: true }).fill('Revisar una mecánica');
+  await expect(page.locator('.save-state')).toHaveText('Cambios sin guardar');
+  await page.getByRole('button', { name: 'EN', exact: true }).click();
+  await expect(page.locator('.save-state')).toHaveText('Unsaved changes');
+  await expect(page.locator('.step-progress')).toHaveText('Step 5 of 5');
+  await page.getByRole('button', { name: /Library/ }).click();
+  await page.getByRole('button', { name: 'Leave without saving', exact: true }).click();
+  await page.getByRole('button', { name: 'Open', exact: true }).click();
+  await expect(page.locator('.save-state')).toHaveText('Saved');
+  await expect(page.getByLabel('Notes', { exact: true })).toHaveValue('');
+});

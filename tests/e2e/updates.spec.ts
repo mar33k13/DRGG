@@ -79,6 +79,9 @@ test('unsaved changes: cancel, failed save blocks install, successful save prece
   await page.getByLabel('Nombre del concepto').fill('Conservar antes de actualizar');
   await page.getByRole('button', { name: 'Acerca de DRGG', exact: true }).click();
   await page.getByRole('button', { name: 'Instalar y reiniciar', exact: true }).click();
+  await expect(page.getByRole('alertdialog').locator('.primary-button')).toHaveText(
+    'Guardar e instalar',
+  );
   await page.getByRole('button', { name: 'Cancelar', exact: true }).click();
   expect(await page.evaluate(() => window.updateMock.installed)).toBeNull();
   await page.getByRole('button', { name: 'Instalar y reiniciar', exact: true }).click();
@@ -88,6 +91,7 @@ test('unsaved changes: cancel, failed save blocks install, successful save prece
   await page.getByRole('button', { name: 'Guardar e instalar', exact: true }).click();
   await expect(page.locator('.toast')).toBeVisible();
   expect(await page.evaluate(() => window.updateMock.installed)).toBeNull();
+  await expect(page.locator('.save-state')).toHaveText('Sin guardar');
   await page.evaluate(() => {
     window.updateMock.saveError = false;
   });

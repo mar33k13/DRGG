@@ -75,11 +75,7 @@ export function UpdatePanel({
           {u.release && !u.info.canInstall && <p className="fineprint">{t.manual}</p>}
           <div className="update-actions">
             {['idle', 'current'].includes(u.phase) && (
-              <button
-                className="secondary-button"
-                onClick={() => void u.check()}
-                disabled={blocked}
-              >
+              <button className="primary-button" onClick={() => void u.check()} disabled={blocked}>
                 <RefreshCw size={15} />
                 {t.check}
               </button>

@@ -114,6 +114,18 @@ export default function App() {
   const dt = developmentText[lang],
     t = translations[lang],
     report = evaluate(draft.config, draft.priorities, lang, draft.development);
+  const stored = library.some((concept) => concept.id === draft.id);
+  const saveState = !ready
+    ? t.loading
+    : loadFailed
+      ? t.storageUnavailable
+      : busy
+        ? t.busy
+        : !stored
+          ? t.unsaved
+          : dirty
+            ? t.unsavedChanges
+            : t.savedState;
   const notify = (msg: string) => {
     setToast(msg);
     if (toastTimer.current) clearTimeout(toastTimer.current);
@@ -601,7 +613,7 @@ export default function App() {
         >
           <img src="/mark.svg" alt="" />
           <span>
-            DRGG<small>DEV RANDOM GAME GENERATOR</small>
+            DRGG<small>unReason</small>
           </span>
         </button>
         <div className="nav-label">{t.workspace}</div>
@@ -612,7 +624,6 @@ export default function App() {
           >
             <Home size={17} />
             {t.home}
-            <span className="nav-shortcut">01</span>
           </button>
           <button onClick={() => start(false)}>
             <Plus size={17} />
@@ -655,17 +666,6 @@ export default function App() {
           })}
         </ol>
         <div className="sidebar-bottom">
-          <div className="tiny-grid" aria-hidden="true">
-            {Array.from({ length: 24 }, (_, i) => (
-              <i key={i} />
-            ))}
-          </div>
-          <span className="eyebrow">{t.openSource}</span>
-          <p>
-            MAKE SOMETHING
-            <br />
-            <strong>WORTH PLAYING.</strong>
-          </p>
           <button className="about-button" onClick={() => setAbout(true)}>
             <Info size={13} />
             {t.about}
@@ -677,12 +677,19 @@ export default function App() {
       </aside>
       <div className="main-shell">
         <header className="topbar">
-          <span className="topbar-label">
-            <span className="cross">✳</span>
-            {t.station}
-            <span className="slash">/</span>
-            <span className="topbar-section">
-              {screen === 'home' ? t.home : screen === 'library' ? t.library : t.steps[step]}
+          <span
+            className="topbar-label"
+            title={screen === 'wizard' ? draft.title.trim() || t.untitled : undefined}
+          >
+            <span className="cross" aria-hidden="true">
+              ✳
+            </span>
+            <span className="active-context">
+              {screen === 'wizard'
+                ? draft.title.trim() || t.untitled
+                : screen === 'home'
+                  ? t.home
+                  : t.library}
             </span>
           </span>
           <div className="topbar-right">
@@ -704,10 +711,6 @@ export default function App() {
             >
               {reducedMotion ? <CirclePlay size={18} /> : <CirclePause size={18} />}
             </button>
-            <span className="offline">
-              <span className="status-dot" />
-              {t.offline}
-            </span>
             <div className="language-switch" aria-label="Language">
               <button aria-pressed={lang === 'es'} onClick={() => setLang('es')}>
                 ES
@@ -833,16 +836,9 @@ export default function App() {
                 headingRef={headingRef}
                 title={t.steps[step]}
                 description={t.stepDescriptions[step]}
-                kicker={
-                  <>
-                    CONCEPT LAB{' '}
-                    <span className="accent">/ {String(step + 1).padStart(2, '0')}</span>
-                  </>
-                }
                 actions={
-                  <span className="page-number">
-                    0{step + 1}
-                    <small>/ 05</small>
+                  <span className="step-progress">
+                    {t.step} {step + 1} {t.of} {t.steps.length}
                   </span>
                 }
               />
@@ -976,20 +972,19 @@ export default function App() {
                         )}
                         {step === 0 && (
                           <div className="scope-tip">
-                            <Orbit size={34} />
+                            <LockKeyhole size={18} />
                             <div>
-                              <span className="eyebrow">START SMALL</span>
                               <p>
                                 {lang === 'es'
-                                  ? 'Una mecánica que funcione vale más que diez a medias. El equipo y el objetivo empiezan bloqueados para que el azar respete tus límites.'
-                                  : 'One working mechanic beats ten unfinished ones. Your team and goal start locked so randomization respects your limits.'}
+                                  ? 'El equipo y el objetivo empiezan bloqueados para que el azar respete tus límites.'
+                                  : 'Your team and goal start locked so randomization respects your limits.'}
                               </p>
                             </div>
                           </div>
                         )}
                         {step === 1 && (
                           <div className="concept-preview">
-                            <span className="eyebrow">CONCEPT SIGNAL</span>
+                            <span className="eyebrow">{t.preview}</span>
                             <p>{report.description}</p>
                             <div className="signal-line" />
                           </div>
@@ -1212,7 +1207,6 @@ export default function App() {
             <div className="library-screen">
               <SectionHeading
                 title={t.library}
-                kicker="YOUR IDEA ARCHIVE"
                 description={
                   <>
                     {library.length.toString().padStart(2, '0')} {t.concepts}
@@ -1342,9 +1336,15 @@ export default function App() {
             <span className="status-dot" />
             {t.allLocal}
           </span>
-          <span>
-            {dirty ? '● ' : ''}DRGG — v{updater.info.version}
-          </span>
+          {screen === 'wizard' && (
+            <span
+              className="save-state"
+              aria-live="polite"
+              data-state={loadFailed ? 'error' : stored && !dirty ? 'saved' : 'unsaved'}
+            >
+              {saveState}
+            </span>
+          )}
           <span className="footer-count">
             {library.length.toString().padStart(2, '0')} / {t.concepts}
           </span>
@@ -1396,7 +1396,6 @@ export default function App() {
               descriptionId="modal-body"
               title={prompt?.title || t.about}
               description={prompt?.body || t.aboutText}
-              kicker={about ? 'DRGG / STUDIO' : undefined}
             />
             {about && !prompt && (
               <>
@@ -1430,7 +1429,8 @@ export default function App() {
                     {t.cancel}
                   </button>
                   <button
-                    className="primary-button"
+                    className={prompt.saveAction ? 'secondary-button' : 'primary-button'}
+                    disabled={busy}
                     onClick={() => {
                       const action = prompt.action;
                       setPrompt(null);
@@ -1454,7 +1454,11 @@ export default function App() {
                   )}
                 </>
               ) : (
-                <button className="primary-button" disabled={busy} onClick={() => setAbout(false)}>
+                <button
+                  className="secondary-button"
+                  disabled={busy}
+                  onClick={() => setAbout(false)}
+                >
                   {t.close}
                 </button>
               )}
