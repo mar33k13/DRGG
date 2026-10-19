@@ -1,0 +1,161 @@
+{
+  "theme": [
+    { "id": "space", "es": "Espacio", "en": "Space" },
+    { "id": "medieval", "es": "Medieval", "en": "Medieval" },
+    { "id": "workshop", "es": "Taller mecánico", "en": "Repair shop" },
+    { "id": "nature", "es": "Naturaleza", "en": "Nature" },
+    { "id": "cyberpunk", "es": "Cyberpunk", "en": "Cyberpunk" },
+    { "id": "ocean", "es": "Océano", "en": "Ocean" },
+    { "id": "mystery", "es": "Misterio", "en": "Mystery" },
+    { "id": "everyday", "es": "Vida cotidiana", "en": "Everyday life" },
+    { "id": "haunted", "es": "Lugar embrujado", "en": "Haunted place" },
+    { "id": "cooking", "es": "Cocina", "en": "Cooking" }
+  ],
+  "genre": [
+    { "id": "action", "es": "Acción", "en": "Action" },
+    { "id": "adventure", "es": "Aventura", "en": "Adventure" },
+    { "id": "simulation", "es": "Simulación", "en": "Simulation" },
+    { "id": "strategy", "es": "Estrategia", "en": "Strategy" },
+    { "id": "puzzle", "es": "Puzles", "en": "Puzzle" },
+    { "id": "rpg", "es": "RPG", "en": "RPG" },
+    { "id": "horror", "es": "Terror", "en": "Horror" }
+  ],
+  "subgenre": [
+    {
+      "id": "arcade",
+      "es": "Arcade",
+      "en": "Arcade",
+      "genres": ["action", "simulation", "puzzle"]
+    },
+    {
+      "id": "platformer",
+      "es": "Plataformas",
+      "en": "Platformer",
+      "genres": ["action", "adventure"]
+    },
+    { "id": "tycoon", "es": "Tycoon", "en": "Tycoon", "genres": ["simulation", "strategy"] },
+    {
+      "id": "survival",
+      "es": "Supervivencia",
+      "en": "Survival",
+      "genres": ["action", "adventure", "simulation", "horror", "rpg"]
+    },
+    {
+      "id": "roguelike",
+      "es": "Roguelike",
+      "en": "Roguelike",
+      "genres": ["action", "strategy", "rpg"]
+    },
+    {
+      "id": "exploration",
+      "es": "Exploración",
+      "en": "Exploration",
+      "genres": ["adventure", "horror", "rpg"]
+    },
+    {
+      "id": "management",
+      "es": "Gestión",
+      "en": "Management",
+      "genres": ["simulation", "strategy"]
+    },
+    { "id": "logic", "es": "Lógica", "en": "Logic", "genres": ["puzzle", "strategy"] },
+    {
+      "id": "escape",
+      "es": "Escape room",
+      "en": "Escape room",
+      "genres": ["puzzle", "adventure", "horror"]
+    }
+  ],
+  "engine": [
+    {
+      "id": "godot",
+      "es": "Godot",
+      "en": "Godot",
+      "platforms": ["pc", "mobile", "web"],
+      "dimensions": ["2d", "2.5d", "3d"]
+    },
+    {
+      "id": "unity",
+      "es": "Unity",
+      "en": "Unity",
+      "platforms": ["pc", "mobile", "web", "console"],
+      "dimensions": ["2d", "2.5d", "3d"]
+    },
+    {
+      "id": "unreal",
+      "es": "Unreal Engine",
+      "en": "Unreal Engine",
+      "platforms": ["pc", "mobile", "console"],
+      "dimensions": ["2d", "2.5d", "3d"]
+    },
+    {
+      "id": "roblox",
+      "es": "Roblox Studio",
+      "en": "Roblox Studio",
+      "platforms": ["roblox"],
+      "dimensions": ["3d"]
+    },
+    {
+      "id": "gamemaker",
+      "es": "GameMaker",
+      "en": "GameMaker",
+      "platforms": ["pc", "mobile", "web", "console"],
+      "dimensions": ["2d", "2.5d"]
+    },
+    {
+      "id": "construct",
+      "es": "Construct 3",
+      "en": "Construct 3",
+      "platforms": ["pc", "mobile", "web"],
+      "dimensions": ["2d", "2.5d"]
+    }
+  ],
+  "platform": [
+    { "id": "pc", "es": "PC · Windows / macOS / Linux", "en": "PC · Windows / macOS / Linux" },
+    { "id": "mobile", "es": "Móvil · Android / iOS", "en": "Mobile · Android / iOS" },
+    { "id": "web", "es": "Navegador", "en": "Browser" },
+    { "id": "console", "es": "Consolas", "en": "Consoles" },
+    { "id": "roblox", "es": "Roblox", "en": "Roblox" }
+  ],
+  "dimension": [
+    { "id": "2d", "es": "2D", "en": "2D" },
+    { "id": "2.5d", "es": "2.5D", "en": "2.5D" },
+    { "id": "3d", "es": "3D", "en": "3D" }
+  ],
+  "perspective": [
+    { "id": "side", "es": "Lateral", "en": "Side view", "dimensions": ["2d", "2.5d", "3d"] },
+    { "id": "top", "es": "Cenital", "en": "Top-down", "dimensions": ["2d", "2.5d", "3d"] },
+    { "id": "iso", "es": "Isométrica", "en": "Isometric", "dimensions": ["2d", "2.5d", "3d"] },
+    { "id": "first", "es": "Primera persona", "en": "First person", "dimensions": ["3d"] },
+    { "id": "third", "es": "Tercera persona", "en": "Third person", "dimensions": ["3d"] }
+  ],
+  "style": [
+    { "id": "pixel", "es": "Pixel art", "en": "Pixel art", "dimensions": ["2d", "2.5d"] },
+    {
+      "id": "handdrawn",
+      "es": "Dibujado a mano",
+      "en": "Hand-drawn",
+      "dimensions": ["2d", "2.5d"]
+    },
+    { "id": "lowpoly", "es": "Low poly", "en": "Low poly", "dimensions": ["3d"] },
+    { "id": "stylized", "es": "Estilizado", "en": "Stylized", "dimensions": ["2d", "2.5d", "3d"] },
+    { "id": "realistic", "es": "Realista", "en": "Realistic", "dimensions": ["3d"] },
+    { "id": "minimal", "es": "Minimalista", "en": "Minimal", "dimensions": ["2d", "2.5d", "3d"] }
+  ],
+  "mode": [
+    { "id": "solo", "es": "Un jugador", "en": "Single player" },
+    { "id": "local", "es": "Cooperativo local", "en": "Local co-op" },
+    { "id": "online", "es": "Cooperativo online", "en": "Online co-op" },
+    { "id": "competitive", "es": "Multijugador competitivo", "en": "Competitive multiplayer" }
+  ],
+  "scope": [
+    { "id": "micro", "es": "Microjuego", "en": "Microgame" },
+    { "id": "prototype", "es": "Prototipo", "en": "Prototype" },
+    { "id": "small", "es": "Juego pequeño", "en": "Small game" }
+  ],
+  "team": [
+    { "id": "1", "es": "1 persona", "en": "1 person" },
+    { "id": "2-3", "es": "2–3 personas", "en": "2–3 people" },
+    { "id": "4+", "es": "4+ personas", "en": "4+ people" }
+  ]
+}

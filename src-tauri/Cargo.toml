@@ -1,0 +1,18 @@
+[package]
+name = "drgg"
+version = "0.1.0"
+description = "Small ideas. Possible games. An offline game concept generator."
+authors = ["kaizem (mar33k13)"]
+license = "GPL-3.0-only"
+edition = "2021"
+rust-version = "1.90"
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = [] }
+tauri-plugin-dialog = "2"
+tauri-plugin-single-instance = "2"
+serde_json = "1"
+tempfile = "3"

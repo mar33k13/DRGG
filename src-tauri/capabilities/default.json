@@ -1,0 +1,6 @@
+{
+  "identifier": "main-capability",
+  "description": "Main window; file operations are implemented as narrowly scoped native commands.",
+  "windows": ["main"],
+  "permissions": ["core:default", "core:window:allow-destroy"]
+}

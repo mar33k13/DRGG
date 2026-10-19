@@ -1,0 +1,15 @@
+node_modules/
+.pnpm-store/
+dist/
+src-tauri/target/
+src-tauri/gen/
+test-results/
+playwright-report/
+.DS_Store
+.env*
+*.local
+# Private visual reference; no redistribution rights asserted.
+canvas_unReason-261019_1050.png
+.tools/
+src-tauri/icons/android/
+src-tauri/icons/ios/

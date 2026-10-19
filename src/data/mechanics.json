@@ -1,0 +1,97 @@
+{
+  "action": [
+    {
+      "es": "Una acción principal con respuesta clara: esquivar, saltar o golpear.",
+      "en": "One primary action with clear feedback: dodge, jump or strike."
+    },
+    {
+      "es": "Un obstáculo con un patrón que se pueda aprender.",
+      "en": "One obstacle with a learnable pattern."
+    },
+    {
+      "es": "Una ronda corta con puntuación y reinicio rápido.",
+      "en": "A short round with scoring and quick restart."
+    }
+  ],
+  "adventure": [
+    {
+      "es": "Explorar una única zona con tres puntos de interés.",
+      "en": "Explore one area with three points of interest."
+    },
+    {
+      "es": "Encontrar un objeto y usarlo para abrir un camino.",
+      "en": "Find an item and use it to open a path."
+    },
+    {
+      "es": "Resolver un encuentro que cierre el recorrido.",
+      "en": "Resolve one encounter to complete the journey."
+    }
+  ],
+  "simulation": [
+    {
+      "es": "Realizar una tarea con tres interacciones manuales.",
+      "en": "Complete a task with three hands-on interactions."
+    },
+    {
+      "es": "Recibir una recompensa y comprar una mejora.",
+      "en": "Earn a reward and buy one upgrade."
+    },
+    {
+      "es": "Repetir el ciclo con una variación de dificultad.",
+      "en": "Repeat the loop with one difficulty variation."
+    }
+  ],
+  "strategy": [
+    { "es": "Gestionar un único recurso limitado.", "en": "Manage one limited resource." },
+    {
+      "es": "Elegir entre dos acciones con consecuencias distintas.",
+      "en": "Choose between two actions with different consequences."
+    },
+    {
+      "es": "Superar un escenario con una condición de victoria.",
+      "en": "Complete one scenario with a clear win condition."
+    }
+  ],
+  "puzzle": [
+    {
+      "es": "Manipular un tipo de pieza con una sola regla.",
+      "en": "Manipulate one type of piece using one rule."
+    },
+    {
+      "es": "Resolver tres variaciones del mismo puzle.",
+      "en": "Solve three variations of the same puzzle."
+    },
+    {
+      "es": "Permitir deshacer y reiniciar sin penalización.",
+      "en": "Allow undo and restart without a penalty."
+    }
+  ],
+  "rpg": [
+    {
+      "es": "Un personaje con dos atributos y una habilidad.",
+      "en": "One character with two stats and one ability."
+    },
+    {
+      "es": "Un encuentro que use esa habilidad y dé una recompensa.",
+      "en": "One encounter that uses that ability and grants a reward."
+    },
+    {
+      "es": "Una mejora que cambie la siguiente decisión.",
+      "en": "One upgrade that changes the next decision."
+    }
+  ],
+  "horror": [
+    {
+      "es": "Explorar un espacio pequeño con visibilidad limitada.",
+      "en": "Explore a small space with limited visibility."
+    },
+    {
+      "es": "Reconocer una amenaza mediante una señal sonora o visual.",
+      "en": "Recognize a threat through a sound or visual cue."
+    },
+    {
+      "es": "Conseguir un objeto y alcanzar una única salida.",
+      "en": "Retrieve an item and reach a single exit."
+    }
+  ]
+}

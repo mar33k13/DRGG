@@ -1,0 +1,12 @@
+node_modules
+.tools
+.pnpm-store
+dist
+src-tauri/target
+src-tauri/gen
+src-tauri/icons
+test-results
+playwright-report
+pnpm-lock.yaml
+LICENSE
+src/data/third-party-notices.txt

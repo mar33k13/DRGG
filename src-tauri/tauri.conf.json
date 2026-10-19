@@ -1,0 +1,47 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "DRGG",
+  "version": "0.1.0",
+  "identifier": "io.github.mar33k13.drgg",
+  "build": {
+    "beforeDevCommand": "pnpm dev",
+    "devUrl": "http://localhost:1420",
+    "beforeBuildCommand": "pnpm build",
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "windows": [
+      {
+        "label": "main",
+        "title": "DRGG — DevRandomGameGenerator",
+        "width": 1320,
+        "height": 900,
+        "minWidth": 780,
+        "minHeight": 620,
+        "backgroundColor": "#141615"
+      }
+    ],
+    "security": {
+      "csp": "default-src 'self'; img-src 'self' asset: http://asset.localhost; style-src 'self' 'unsafe-inline'; script-src 'self'; connect-src ipc: http://ipc.localhost; object-src 'none'; base-uri 'self'"
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ],
+    "category": "DeveloperTool",
+    "shortDescription": "Small ideas. Possible games.",
+    "copyright": "Copyright © 2026 kaizem (mar33k13)",
+    "license": "GPL-3.0-only",
+    "licenseFile": "../LICENSE",
+    "macOS": { "minimumSystemVersion": "11.0" },
+    "windows": { "nsis": { "languages": ["English", "Spanish"], "displayLanguageSelector": true } },
+    "linux": { "appimage": { "bundleMediaFramework": false } }
+  }
+}

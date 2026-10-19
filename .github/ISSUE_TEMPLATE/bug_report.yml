@@ -1,0 +1,15 @@
+name: Bug / Error
+description: Describe a reproducible problem / Describe un error reproducible
+body:
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps, expected and actual result / Pasos y resultado
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: DRGG version and OS / Versión y sistema operativo
+    validations:
+      required: true
