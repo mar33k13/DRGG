@@ -6,7 +6,11 @@ test('manual workflow, real engines, priorities, persistence, duplicate and dele
   await expect(
     page.getByRole('heading', { name: 'Ideas pequeñas. Juegos posibles.' }),
   ).toBeVisible();
-  await page.screenshot({ path: testInfo.outputPath('home.png'), fullPage: true });
+  await page.screenshot({
+    path: testInfo.outputPath('home.png'),
+    fullPage: true,
+    animations: 'disabled',
+  });
   await page.getByRole('button', { name: /01 \/ MANUAL/ }).click();
   await page.getByLabel('Tu equipo', { exact: true }).selectOption('2-3');
   await page.getByRole('button', { name: 'Siguiente', exact: true }).click();
@@ -29,7 +33,11 @@ test('manual workflow, real engines, priorities, persistence, duplicate and dele
   }
   await page.getByRole('heading', { name: 'Tu concepto.' }).focus();
   await page.evaluate(() => window.scrollTo(0, 0));
-  await page.screenshot({ path: testInfo.outputPath('concept.png'), fullPage: true });
+  await page.screenshot({
+    path: testInfo.outputPath('concept.png'),
+    fullPage: true,
+    animations: 'disabled',
+  });
   await page.getByRole('button', { name: 'Guardar concepto', exact: true }).click();
   await expect(page.getByRole('status')).toContainText('Concepto guardado');
   await page.reload();

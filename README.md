@@ -2,7 +2,7 @@
 
 **Ideas pequeñas. Juegos posibles. / Small ideas. Possible games.**
 
-App de escritorio para decidir qué videojuego pequeño construir en 5–10 minutos. Creada por **kaizem (mar33k13)**. Sin IA, cuentas, telemetría, suscripciones ni servicios externos.
+App de escritorio para decidir qué videojuego pequeño construir en 5–10 minutos. Creada por **kaizem (mar33k13)**. Generación por plantillas, sin cuentas, telemetría, suscripciones ni servicios externos.
 
 ![Pantalla inicial de DRGG](docs/screenshots/home.png)
 
@@ -11,14 +11,16 @@ App de escritorio para decidir qué videojuego pequeño construir en 5–10 minu
 Los instaladores publicados estarán en [GitHub Releases](https://github.com/mar33k13/DRGG/releases). Antes de publicar una versión, los paquetes de prueba se descargan como artifacts desde GitHub Actions. No necesitas Node ni Rust para usar un instalador.
 
 1. Elige **Crear concepto** o **Generar aleatoriamente**.
-2. Define el equipo real y objetivo: microjuego, prototipo o juego pequeño.
+2. Define el equipo real, objetivo y modelo de desarrollo: **humano, híbrido o principalmente con IA**. Indica las áreas de apoyo cuando corresponda.
 3. Combina tema, género, subgénero, motor, plataforma, dimensionalidad, perspectiva, estilo y modo de juego.
 4. Reparte **100 puntos** entre mecánicas, físicas, gráficos, narrativa y audio.
-5. Obtén una ficha con tres mecánicas, recortes de alcance, complejidad y equipo orientativo. Ponle nombre y guárdala.
+5. Obtén una ficha con tres mecánicas, recortes de alcance, complejidad técnica, exigencia para tu equipo y equipo humano orientativo. Ponle nombre y guárdala.
 
 Bloquea cualquier selector para conservarlo al sortear. Equipo y objetivo empiezan bloqueados. El modo **coherente** ajusta selecciones relacionadas respetando los bloqueos; si no existe solución, avisa sin modificarlos. El modo **libre** admite mezclas incompatibles y las señala. El exceso de alcance se advierte, sin bloquear. Las reglas son una selección práctica, no todas las posibilidades técnicas de cada motor.
 
-La biblioteca permite abrir, editar, duplicar y eliminar conceptos. Exporta Markdown, texto o JSON; importa JSON v1 de DRGG para recuperar o compartir conceptos. Solo JSON conserva los datos estructurados para reimportarlos. Los textos se construyen con plantillas.
+La biblioteca permite abrir, editar, duplicar y eliminar conceptos. Exporta Markdown, texto o JSON; importa JSON v1/v2 de DRGG para recuperar o compartir conceptos. Solo JSON conserva los datos estructurados para reimportarlos. Los textos se construyen con plantillas. El modelo de desarrollo describe cómo harás el juego; DRGG no ejecuta IA. Las recomendaciones explican las condiciones de apoyo e integración.
+
+Tarjetas de motores, géneros y dimensiones, transiciones de etapas y respuesta visual al sortear, bloquear y guardar. El control de animaciones de la barra superior permite reducir el movimiento; también se respeta la preferencia del sistema.
 
 ## Datos locales
 
@@ -28,7 +30,9 @@ La app guarda `library-v1.json` en la carpeta de datos de `io.github.mar33k13.dr
 - Windows: `%APPDATA%\io.github.mar33k13.drgg\`
 - Linux: `${XDG_DATA_HOME:-~/.local/share}/io.github.mar33k13.drgg/`
 
-Escritura atómica y una sola instancia. **No hay copia en la nube**: exporta para hacer respaldos. Si la biblioteca no se puede leer, se bloquea el guardado para no sobrescribirla. Conserva el archivo original, revisa permisos y recupera exportaciones; no borres una biblioteca dañada sin respaldarla. El idioma se recuerda en el almacenamiento local del visor.
+Escritura atómica y una sola instancia. **No hay copia en la nube**: exporta para hacer respaldos. Si la biblioteca no se puede leer, se bloquea el guardado para no sobrescribirla. Conserva el archivo original, revisa permisos y recupera exportaciones; no borres una biblioteca dañada sin respaldarla. El idioma y la preferencia de movimiento se recuerdan en el almacenamiento local del visor.
+
+Se mantiene el nombre de archivo `library-v1.json` para encontrar bibliotecas anteriores. El contenido guardado y las exportaciones nuevas usan el formato v2. Al leer v1 se asigna desarrollo humano; se migra en disco al guardar. Las versiones antiguas de la app rechazan v2 para evitar perder los nuevos campos.
 
 La previsualización de desarrollo en navegador guarda una biblioteca independiente en `localStorage`. Borrar sus datos elimina esa biblioteca. Importación limitada a 2 MB y a IDs existentes en el catálogo. No hay editor de contenido ni paquetes externos en 0.1.
 
@@ -59,13 +63,13 @@ Actions comprueba la interfaz y prepara paquetes para macOS Apple Silicon/Intel,
 
 ## Contribuir
 
-Lee [CONTRIBUTING.md](CONTRIBUTING.md). Catálogo: `src/data/catalog.json`; mecánicas: `src/data/mechanics.json`; traducciones: `src/i18n.ts`; reglas: `src/core.ts`. Consulta [el alcance acordado](docs/PRODUCT.md) y [las reglas](docs/COMPLEXITY.md). No se incluyen recursos de Game Dev Tycoon ni logos comerciales. Las marcas se usan como nombres descriptivos, sin afiliación.
+Lee [CONTRIBUTING.md](CONTRIBUTING.md). Catálogo: `src/data/catalog.json`; mecánicas: `src/data/mechanics.json`; traducciones: `src/i18n.ts`, `src/development.ts` y `src/choiceDetails.ts`; reglas: `src/core.ts`. Consulta [el alcance acordado](docs/PRODUCT.md) y [las reglas](docs/COMPLEXITY.md). No se incluyen recursos de Game Dev Tycoon ni logos comerciales. Las marcas se usan como nombres descriptivos, sin afiliación.
 
 ## English
 
-An **offline desktop game-idea generator**. Start manually or roll a concept, set your real team and scope, choose real engines and platforms, then allocate 100 effort points. Get a compact brief with three prototype mechanics, scope cuts, transparent complexity guidance and a suggested team size. No AI, accounts, telemetry, cloud storage or time estimates.
+An **offline desktop game-idea generator**. Start manually or roll a concept, set your real team and scope, choose real engines and platforms, then allocate 100 effort points. Get a compact brief with three prototype mechanics, scope cuts, transparent complexity guidance and a suggested team size. No AI services, accounts, telemetry, cloud storage or time estimates. Select human, hybrid or mostly AI development and its areas of assistance; this describes your workflow, not a service run by DRGG. Technical complexity is separate from conditional team guidance.
 
-Spanish and English included. Lock choices and reroll the rest. Coherent mode repairs dependent choices while respecting locks; free mode allows unusual combinations with warnings. Save, edit, duplicate, delete and import concepts. Export Markdown, plain text and versioned JSON. Use Releases for installers; development commands are above. Initial binaries are unsigned; successful platform builds are not manual runtime tests.
+Spanish and English included. Lock choices and reroll the rest. Coherent mode repairs dependent choices while respecting locks; free mode allows unusual combinations with warnings. Save, edit, duplicate, delete and import concepts. Export Markdown, plain text and v2 JSON; v1 imports migrate to a human development model. Animation preferences are remembered, and system reduced motion is respected. Use Releases for installers; development commands are above. Initial binaries are unsigned; successful platform builds are not manual runtime tests.
 
 ## License
 

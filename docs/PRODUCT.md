@@ -29,7 +29,7 @@ JSON y biblioteca v2 conservan el modelo. Se leen los conceptos v1 como humanos 
 
 Requisito explícito añadido por el autor: **DRGG debe ser visualmente muy bonita y tener animaciones atractivas**. La calidad visual y el movimiento forman parte del producto y de su sensación de videojuego. El moodboard sigue siendo la referencia para la identidad; la interfaz debe tener una composición cuidada, tipografía legible, buen contraste, espaciado consistente y controles con personalidad.
 
-Dirección de movimiento para desarrollar y revisar:
+Dirección de movimiento implementada:
 
 - Transiciones fluidas entre las cinco etapas y entradas suaves de los paneles.
 - Animación al sortear combinaciones que transmita exploración y conserve visualmente los campos bloqueados.
@@ -37,6 +37,6 @@ Dirección de movimiento para desarrollar y revisar:
 - Barras de esfuerzo e indicadores de complejidad con cambios animados que permitan seguir el nuevo reparto.
 - Elementos ambientales sutiles, como las órbitas de la pantalla inicial, coherentes con la estética de consola retrofuturista.
 
-Las animaciones deben sentirse ágiles, mantener la navegación por teclado y respetar la preferencia del sistema de reducir movimiento. No deben introducir esperas obligatorias ni entorpecer el objetivo de concretar una idea en 5–10 minutos. Su implementación se comprobará en la aplicación; documentar este requisito no significa que todas estas animaciones estén ya realizadas.
+Las animaciones deben sentirse ágiles, mantener la navegación por teclado y respetar la preferencia del sistema de reducir movimiento. No deben introducir esperas obligatorias ni entorpecer el objetivo de concretar una idea en 5–10 minutos. El control superior permite reducir las animaciones y recuerda la elección; la preferencia de reducción del sistema tiene prioridad. El movimiento ambiental se pausa cuando el documento está oculto. La verificación de cada entrega se registra en VALIDATION.md.
 
 Criterio de aceptación: completar el flujo en menos de diez minutos, identificar un foco de práctica, obtener un alcance compacto, guardar y reabrir el concepto. Registrar por separado pruebas de lógica, interfaz, compilación por plataforma y ejecución nativa.

@@ -2,7 +2,7 @@
 
 19 de octubre de 2026. Evidencia local, sin dar por verificados sistemas donde no se ha ejecutado la aplicación.
 
-## Comprobado
+## Versión inicial comprobada (`2eabc37`)
 
 - TypeScript estricto e interfaz de producción compilados.
 - 11 pruebas de lógica: 1.000 generaciones coherentes, conservación y conflictos de bloqueos, todos los motores, presupuesto de 100 puntos tras 2.000 modificaciones, validación de JSON y exportación bilingüe.
@@ -18,6 +18,17 @@ Paquete macOS Apple Silicon local: `DRGG_0.1.0_aarch64.dmg`. SHA-256: `0568fae7d
 ## Compilaciones en GitHub
 
 [Desktop packages](https://github.com/mar33k13/DRGG/actions/runs/39244667554), commit de aplicación `2eabc37142b6585e8430e3ad6feaa7324a76c5a8`: pruebas Rust y empaquetado superados en macOS Apple Silicon, macOS Intel, Windows x64 y Linux x64. Instaladores generados: DMG para ambas arquitecturas macOS; EXE y MSI para Windows; AppImage, DEB y RPM para Linux. No se afirma ejecución manual de esos instaladores fuera del Mac Apple Silicon local.
+
+## Renovación de interfaz y modelos de desarrollo (revisión del 19 de octubre)
+
+- 16 pruebas Vitest superadas: generación, bloqueos, esfuerzo, intercambio bilingüe, migración v1→v2, rechazo de modelos malformados y separación de complejidad técnica frente a equipo condicionado por tareas de IA.
+- 8 recorridos Playwright en Chrome superados. Añaden persistencia/exportación del modelo híbrido, tarjetas con teclado, Roblox coherente y bloqueado, preferencia de movimiento local/sistema y todas las etapas a 390 píxeles sin desbordamiento horizontal.
+- 2 pruebas Rust superadas: escritura atómica/límites y persistencia v1/v2 con rechazo de una versión desconocida sin sobrescritura.
+- TypeScript, Vite de producción y Prettier superados. Vite mantiene el aviso del paquete grande por los textos legales incluidos; no hay nuevas dependencias.
+- Revisión visual en navegador y WebKit nativo macOS Apple Silicon; tamaño de los selectores normalizado y flecha empaquetada como recurso local compatible con la política de contenidos nativa. Tarjetas de motores, nueva paleta, modelo de desarrollo, ficha y biblioteca revisados. Las transiciones no bloquean los controles; movimiento reducido comprobado automáticamente. No se ha medido el rendimiento en máquinas externas.
+- Prueba nativa real: guardar «Órbita híbrida — ejemplo» con programación y arte, cerrar, reabrir y recuperar sus selecciones. Archivo en disco comprobado: versión 2, tres conceptos; los dos ejemplos anteriores se conservan como humanos sin áreas.
+- App y DMG Apple Silicon reconstruidos desde `e10653c`. SHA-256 del DMG final: `16bc2ac5479c6776fa19f5d320e1b490d95886eeced88ce0595cc15db345c2cb`. El primer empaquetado del DMG falló en el sandbox (`hdiutil: Device not configured`); el segundo, con acceso al empaquetador de macOS, terminó correctamente.
+- Los instaladores del borrador `preview-0.1.0` y las compilaciones multiplataforma enlazadas arriba corresponden a la versión inicial; no se han sustituido con esta revisión de interfaz.
 
 ## Límites
 
