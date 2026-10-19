@@ -49,13 +49,14 @@ import {
 } from './core';
 import { loadLibrary, openImport, saveExport, saveLibrary } from './storage';
 import { translations } from './i18n';
+import { choiceDetails } from './choiceDetails';
 import { aiAreas, developmentModes, developmentText } from './development';
 type Screen = 'home' | 'wizard' | 'library';
 type Prompt = { title: string; body: string; confirm: string; action: () => void };
 const stepFields: Field[][] = [
   ['team', 'scope'],
   ['theme', 'genre', 'subgenre'],
-  ['engine', 'platform', 'dimension', 'perspective', 'style', 'mode'],
+  ['engine', 'dimension', 'platform', 'mode', 'perspective', 'style'],
 ];
 const icons = [ScanLine, Orbit, Cpu, SlidersHorizontal, Layers3];
 function initialLang(): Lang {
@@ -329,10 +330,15 @@ export default function App() {
   };
   const renderField = (field: Field, index: number) => {
     const locked = draft.locks.includes(field);
+    const cards = ['engine', 'genre', 'dimension'].includes(field);
     return (
-      <div key={field} className={`field-card ${locked ? 'is-locked' : ''}`}>
+      <div
+        key={field}
+        className={`field-card ${locked ? 'is-locked' : ''} ${cards ? 'choice-field' : ''}`}
+        data-field={field}
+      >
         <div className="field-label">
-          <label htmlFor={`field-${field}`}>
+          <label id={`label-${field}`} htmlFor={cards ? undefined : `field-${field}`}>
             <span className="micro">{String(index + 1).padStart(2, '0')}</span>
             {t.fieldNames[field]}
           </label>
@@ -350,19 +356,55 @@ export default function App() {
             {locked ? <LockKeyhole size={15} /> : <LockKeyholeOpen size={15} />}
           </button>
         </div>
-        <select
-          id={`field-${field}`}
-          aria-label={t.fieldNames[field]}
-          disabled={busy}
-          value={draft.config[field]}
-          onChange={(e) => changeField(field, e.target.value)}
-        >
-          {catalog[field].map((o) => (
-            <option key={o.id} value={o.id}>
-              {o[lang]}
-            </option>
-          ))}
-        </select>
+        {cards ? (
+          <div
+            className={`choice-grid choices-${field}`}
+            role="group"
+            aria-labelledby={`label-${field}`}
+          >
+            {catalog[field].map((o) => {
+              const detail = choiceDetails[o.id as keyof typeof choiceDetails];
+              const Icon = detail?.icon || Gamepad2;
+              return (
+                <label className="choice-option" key={o.id}>
+                  <input
+                    type="radio"
+                    name={`choice-${field}`}
+                    value={o.id}
+                    aria-label={o[lang]}
+                    checked={draft.config[field] === o.id}
+                    disabled={busy}
+                    onChange={() => changeField(field, o.id)}
+                  />
+                  <span className="choice-face">
+                    <span className="choice-symbol">
+                      <Icon size={21} strokeWidth={1.5} />
+                    </span>
+                    <span className="choice-copy">
+                      <strong>{o[lang]}</strong>
+                      <small>{detail?.[lang]}</small>
+                    </span>
+                    <Check className="choice-check" size={15} />
+                  </span>
+                </label>
+              );
+            })}
+          </div>
+        ) : (
+          <select
+            id={`field-${field}`}
+            aria-label={t.fieldNames[field]}
+            disabled={busy}
+            value={draft.config[field]}
+            onChange={(e) => changeField(field, e.target.value)}
+          >
+            {catalog[field].map((o) => (
+              <option key={o.id} value={o.id}>
+                {o[lang]}
+              </option>
+            ))}
+          </select>
+        )}
         <div className="field-bottom">
           <span>{locked ? t.locked : t.unlocked}</span>
           <span className="tiny-cross">+</span>
@@ -370,7 +412,7 @@ export default function App() {
       </div>
     );
   };
-  const ScopePanel = () => (
+  const scopePanel = (
     <aside className="scope-panel">
       <div className="panel-kicker">
         <Radio size={14} />
@@ -645,7 +687,7 @@ export default function App() {
             </div>
           )}
           {screen === 'wizard' && (
-            <div className="wizard-screen">
+            <div className={`wizard-screen ${step === 4 ? 'is-result' : ''}`}>
               <div className="page-heading">
                 <div>
                   <span className="eyebrow">
@@ -830,6 +872,17 @@ export default function App() {
                   )}
                   {step === 4 && (
                     <div className="result-panel">
+                      <div
+                        className={`concept-banner theme-${draft.config.theme}`}
+                        aria-hidden="true"
+                      >
+                        <div className="banner-orbit" />
+                        <span>CONCEPT / {label('theme', draft.config.theme, lang)}</span>
+                        <span>
+                          {label('engine', draft.config.engine, lang)} ·{' '}
+                          {label('dimension', draft.config.dimension, lang)}
+                        </span>
+                      </div>
                       <label className="eyebrow" htmlFor="concept-title">
                         {t.title}
                       </label>
@@ -849,46 +902,53 @@ export default function App() {
                           <span key={area}>{dt.areas[area]}</span>
                         ))}
                       </div>
-                      <div className="result-tags">
-                        {fields.map((k) => (
-                          <span key={k} title={t.fieldNames[k]}>
-                            {label(k, draft.config[k], lang)}
-                          </span>
-                        ))}
-                      </div>
-                      <div className="result-block">
-                        <h2>
-                          <Gamepad2 size={18} />
-                          {t.prototype}
-                        </h2>
-                        <ol>
-                          {report.mechanics.map((m, i) => (
-                            <li key={m}>
-                              <span>0{i + 1}</span>
-                              {m}
-                            </li>
+                      <details className="result-specs">
+                        <summary>
+                          {lang === 'es' ? 'Ver todas las decisiones' : 'View all decisions'}
+                        </summary>
+                        <div className="result-tags">
+                          {fields.map((k) => (
+                            <span key={k} title={t.fieldNames[k]}>
+                              {label(k, draft.config[k], lang)}
+                            </span>
                           ))}
-                        </ol>
+                        </div>
+                      </details>
+                      <div className="result-columns">
+                        <div className="result-block">
+                          <h2>
+                            <Gamepad2 size={18} />
+                            {t.prototype}
+                          </h2>
+                          <ol>
+                            {report.mechanics.map((m, i) => (
+                              <li key={m}>
+                                <span>0{i + 1}</span>
+                                {m}
+                              </li>
+                            ))}
+                          </ol>
+                        </div>
+                        <div className="result-block cuts-block">
+                          <h2>
+                            <Layers3 size={17} />
+                            {t.cuts}
+                          </h2>
+                          <ul>
+                            {report.cuts.map((m) => (
+                              <li key={m}>{m}</li>
+                            ))}
+                          </ul>
+                        </div>
                       </div>
-                      <div className="result-block cuts-block">
-                        <h2>
-                          <Layers3 size={17} />
-                          {t.cuts}
-                        </h2>
-                        <ul>
-                          {report.cuts.map((m) => (
-                            <li key={m}>{m}</li>
-                          ))}
-                        </ul>
-                      </div>
-                      <div className="result-block">
-                        <h2>{t.why}</h2>
+                      <details className="result-block result-reasons">
+                        <summary>{t.why}</summary>
                         <ul>
                           {report.reasons.map((r) => (
                             <li key={r}>{r}</li>
                           ))}
                         </ul>
-                      </div>
+                      </details>
                       <label className="eyebrow" htmlFor="notes">
                         {t.notes}
                       </label>
@@ -952,7 +1012,7 @@ export default function App() {
                     )}
                   </div>
                 </section>
-                <ScopePanel />
+                {scopePanel}
               </div>
             </div>
           )}
@@ -996,6 +1056,14 @@ export default function App() {
                     const r = evaluate(c.config, c.priorities, lang, c.development);
                     return (
                       <article className="saved-card" key={c.id}>
+                        <div
+                          className={`concept-banner theme-${c.config.theme}`}
+                          aria-hidden="true"
+                        >
+                          <div className="banner-orbit" />
+                          <span>{label('theme', c.config.theme, lang)}</span>
+                          <span>{label('genre', c.config.genre, lang)}</span>
+                        </div>
                         <div className="saved-top">
                           <span className="eyebrow">{label('scope', c.config.scope, lang)}</span>
                           <span className={`complexity-pill level-${r.complexity}`}>
@@ -1003,7 +1071,11 @@ export default function App() {
                           </span>
                         </div>
                         <h2>{c.title || t.untitled}</h2>
-                        <p>{r.description}</p>
+                        <p>
+                          {label('genre', c.config.genre, lang)} ·{' '}
+                          {label('subgenre', c.config.subgenre, lang)} ·{' '}
+                          {label('mode', c.config.mode, lang)}
+                        </p>
                         <div className="saved-tags">
                           <span>{label('engine', c.config.engine, lang)}</span>
                           <span>{label('dimension', c.config.dimension, lang)}</span>

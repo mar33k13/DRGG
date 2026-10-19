@@ -11,10 +11,10 @@ test('manual workflow, real engines, priorities, persistence, duplicate and dele
   await page.getByLabel('Tu equipo', { exact: true }).selectOption('2-3');
   await page.getByRole('button', { name: 'Siguiente', exact: true }).click();
   await page.getByLabel('Temática', { exact: true }).selectOption('workshop');
-  await page.getByLabel('Género', { exact: true }).selectOption('simulation');
+  await page.getByRole('radio', { name: 'Simulación', exact: true }).check();
   await page.getByRole('button', { name: 'Siguiente', exact: true }).click();
-  await page.getByLabel('Motor', { exact: true }).selectOption('unity');
-  await expect(page.getByLabel('Motor', { exact: true })).toHaveValue('unity');
+  await page.getByRole('radio', { name: 'Unity', exact: true }).check();
+  await expect(page.getByRole('radio', { name: 'Unity', exact: true })).toBeChecked();
   await page.getByRole('button', { name: 'Siguiente', exact: true }).click();
   await page.getByLabel('Físicas', { exact: true }).fill('60');
   const values = await page
